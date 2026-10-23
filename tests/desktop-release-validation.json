@@ -1,0 +1,41 @@
+{
+  "version": "1.1.0",
+  "packages": [
+    {
+      "platform": "Windows",
+      "filename": "AfterTheEbb-1.1-win.zip",
+      "bytes": 53936332,
+      "sha256": "1671f894346624980e848f5ba36da08be953ccc5c939537e89183f86d31f940d",
+      "architecture": [
+        "x86_64"
+      ],
+      "files": 1720
+    },
+    {
+      "platform": "macOS",
+      "filename": "AfterTheEbb-1.1-mac.zip",
+      "bytes": 62013160,
+      "sha256": "c4918cf209d7634016f010c0283f1450dd98f480895ea3b0396f3f85f800d4fb",
+      "app_launcher": "AfterTheEbb.app/Contents/MacOS/AfterTheEbb",
+      "launcher_mode": "0o100755",
+      "architecture": [
+        "x86_64",
+        "arm64"
+      ],
+      "minimum_macos": null,
+      "files": 1712
+    },
+    {
+      "platform": "Linux",
+      "filename": "AfterTheEbb-1.1-linux.tar.bz2",
+      "bytes": 43996202,
+      "sha256": "5a2c643a502584375cc767e8b0b05681c8eca536ce80318d831334e137e0cf32",
+      "architecture": [
+        "x86_64"
+      ],
+      "launcher_mode": "0o755",
+      "runtime_mode": "0o755",
+      "files": 1714
+    }
+  ]
+}

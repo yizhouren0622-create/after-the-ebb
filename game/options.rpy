@@ -26,6 +26,10 @@ init -20 python:
     build.name = "AfterTheEbb"
     build.directory_name = "AfterTheEbb-1.1"
     build.executable_name = "AfterTheEbb"
+    build.mac_info_plist = {
+        "CFBundleIdentifier": "io.github.yizhouren0622-create.aftertheebb",
+        "CFBundleDisplayName": "海退之后",
+    }
     build.include_update = False
     build.classify("**.pyc", None)
     build.classify("**.bak", None)
