@@ -1,0 +1,24 @@
+{
+  "status": "PASSED",
+  "version": "1.3.0",
+  "test_selection": "knowledge_achievements_release",
+  "assertions": 15,
+  "method": "RenPy internal timed screen events, isolated save directory",
+  "screenshots": [
+    "10-aid-supplies.png",
+    "11-question.png",
+    "12-wrong-no-penalty.png",
+    "13-correct-reward.png",
+    "14-full-bundles.png",
+    "15-achievements-top.png",
+    "16-achievements-progress.png"
+  ],
+  "scope": [
+    "saved question and answer order",
+    "wrong answer without penalty",
+    "retry and deficit-only reward",
+    "full emergency supplies",
+    "achievement archive and cross-campaign persistence",
+    "gentle mode excludes aid"
+  ]
+}

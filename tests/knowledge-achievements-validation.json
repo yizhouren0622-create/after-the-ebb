@@ -1,0 +1,10 @@
+{
+  "checks": 875,
+  "questions": 32,
+  "achievements": 16,
+  "no_penalty_or_daily_quota": true,
+  "deficit_only_rewards": true,
+  "independent_question_rng": true,
+  "saved_question_and_duplicate_awards_checked": true,
+  "cross_campaign_merge_and_old_journal_migration": true
+}

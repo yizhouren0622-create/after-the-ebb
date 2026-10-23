@@ -1,17 +1,23 @@
 [
   {
-    "file": "AfterTheEbb-1.2-win.zip",
-    "verified_game_files": 17,
-    "new_track_and_all_effects_match_source": true
+    "file": "AfterTheEbb-1.3-win.zip",
+    "verified_game_files": 20,
+    "quiz_and_achievement_modules_match_source": true,
+    "soundtrack_and_effects_match_source": true,
+    "font_matches_source": true
   },
   {
-    "file": "AfterTheEbb-1.2-mac.zip",
-    "verified_game_files": 17,
-    "new_track_and_all_effects_match_source": true
+    "file": "AfterTheEbb-1.3-mac.zip",
+    "verified_game_files": 20,
+    "quiz_and_achievement_modules_match_source": true,
+    "soundtrack_and_effects_match_source": true,
+    "font_matches_source": true
   },
   {
-    "file": "AfterTheEbb-1.2-linux.tar.bz2",
-    "verified_game_files": 17,
-    "new_track_and_all_effects_match_source": true
+    "file": "AfterTheEbb-1.3-linux.tar.bz2",
+    "verified_game_files": 20,
+    "quiz_and_achievement_modules_match_source": true,
+    "soundtrack_and_effects_match_source": true,
+    "font_matches_source": true
   }
 ]

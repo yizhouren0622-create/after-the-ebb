@@ -1,6 +1,6 @@
 init -20 python:
     config.name = "海退之后"
-    config.version = "1.2.0"
+    config.version = "1.3.0"
     config.save_directory = "AfterTheEbb-1.0-release"
     config.screen_width = 1600
     config.screen_height = 900
@@ -24,7 +24,7 @@ init -20 python:
     config.main_menu_music = "audio/where_the_sea_was.ogg"
     config.main_menu_music_fadein = 2.0
     build.name = "AfterTheEbb"
-    build.directory_name = "AfterTheEbb-1.2"
+    build.directory_name = "AfterTheEbb-1.3"
     build.executable_name = "AfterTheEbb"
     build.mac_info_plist = {
         "CFBundleIdentifier": "io.github.yizhouren0622-create.aftertheebb",
@@ -52,11 +52,15 @@ init -20 python:
     build.classify("*.md", "all")
 
 default persistent.endings = []
+default persistent.achievements = []
+default persistent.achievement_best = {}
 default s = None
 
 init python:
     import survival as sim
     import opening
+    import knowledge_aid as aid
+    import achievements as awards
     import time
     PAPER = "#080b0c"
     INK = "#e4e7e2"
@@ -96,6 +100,15 @@ init python:
         if key not in persistent.endings:
             persistent.endings.append(key)
             renpy.save_persistent()
+
+    def sync_achievements():
+        earned, best, newly = awards.merge(persistent.achievements, persistent.achievement_best, s)
+        if earned != persistent.achievements or best != persistent.achievement_best:
+            persistent.achievements = earned
+            persistent.achievement_best = best
+            renpy.save_persistent()
+        if newly:
+            renpy.show_screen('achievement_toast', titles=[awards.BY_ID[k][1] for k in newly])
 
 style default:
     font "fonts/SourceHanSansLite.ttf"
@@ -178,12 +191,17 @@ screen main_menu():
             textbutton "继续 / 清晨备份" action FileLoad("camp", confirm=False, slot=True)
         if renpy.can_load("quick-1"):
             textbutton "读取快速存档" action QuickLoad(confirm=False)
-        textbutton "旅途手册" action Show("handbook")
+        hbox:
+            spacing 12
+            textbutton "旅途手册" action Show("handbook")
+            textbutton ("旅途成就 / %d" % len(persistent.achievements)) action Show('achievement_archive')
         textbutton "留下的回声  /  [len(persistent.endings)] / 6" action ShowMenu("ending_archive")
-        textbutton "声音与画面" action ShowMenu("preferences_menu")
-        textbutton "离开" action Quit(confirm=False)
+        hbox:
+            spacing 12
+            textbutton "声音与画面" action ShowMenu("preferences_menu")
+            textbutton "离开" action Quit(confirm=False)
     text "一部关于准备、取舍，与两个人如何活下去的生存冒险。" xpos 82 ypos 817 size 18 color MUTED
-    text "原创独立短篇  /  v1.2" xpos 82 ypos 852 size 17 color MUTED
+    text "原创独立短篇  /  v1.3" xpos 82 ypos 852 size 17 color MUTED
 
 screen expedition_setup():
     tag menu
@@ -207,7 +225,7 @@ screen expedition_setup():
                     text desc size 20 color MUTED line_spacing 6
     hbox:
         xpos 110 ypos 587 spacing 24
-        textbutton "求生 / 标准规则" action SetScreenVariable("mode", "standard") selected mode == "standard"
+        textbutton "求生 / 困难" action SetScreenVariable("mode", "standard") selected mode == "standard"
         textbutton "余温 / 补给更充裕，环境伤害较低" action SetScreenVariable("mode", "gentle") selected mode == "gentle"
     text "每局最多 18 天，每天 3 行动。随机事件不重复抽取直至事件池轮完。\n关键线索固定获得；没有战斗操作。每次行动后自动保存，新游戏自带教学。" xpos 128 ypos 660 size 21 color MUTED line_spacing 9
     textbutton "← 返回" xpos 110 ypos 790 action ShowMenu("main_menu")
@@ -290,7 +308,13 @@ screen hub():
                 text_color INK
                 text_xalign .5
                 action Function(select_tab, tab)
-        textbutton "F5 快存 / F9 快读" text_size 16 xsize 300 action QuickSave()
+        if s['difficulty'] == 'standard':
+            textbutton '知识补给' id 'knowledge_aid' text_size 20 xsize 120 padding (12, 12) action Return(('aid_menu',))
+            textbutton '成就' text_size 20 xsize 80 padding (12, 12) action Show('achievement_archive')
+            textbutton '快存' text_size 19 xsize 85 padding (12, 12) action QuickSave()
+        else:
+            textbutton '旅途成就' text_size 20 xsize 160 action Show('achievement_archive')
+            textbutton '快速存档' text_size 18 xsize 130 action QuickSave()
 
     frame:
         xpos 306 ypos 503 xysize (806, 331)
@@ -431,6 +455,101 @@ screen hub():
                 text guide[1] size 21 xsize 860 color MUTED
             textbutton '跳过教学' xpos 735 ypos 106 text_size 17 padding (8, 2) action SetDict(s, 'tutorial', 7)
 
+screen achievement_toast(titles):
+    zorder 150
+    frame:
+        xpos 1160 ypos 95 xsize 398 background bordered('#000000') padding (18, 14)
+        vbox:
+            spacing 6
+            text '旅途成就已解锁' size 17 color MUTED
+            for title in titles[:2]:
+                text title size 23 color INK
+            if len(titles) > 2:
+                text ('以及另外 %d 项，可在成就页查看。' % (len(titles) - 2)) size 16 color MUTED
+    timer 4.0 action Hide('achievement_toast')
+
+screen achievement_archive():
+    modal True
+    key 'K_ESCAPE' action Hide('achievement_archive')
+    add Solid('#000000f5')
+    frame:
+        xpos 105 ypos 58 xysize (1390, 785) background bordered('#000000') padding (30, 24)
+        vbox:
+            spacing 15
+            text '这一路留下的证明' size 36
+            text ('已解锁 %d / %d  /  跨周目保留，不额外奖励物资。' % (len(persistent.achievements), len(awards.DEFINITIONS))) size 21 color MUTED
+            viewport:
+                id 'achievement_list'
+                xysize (1320, 560) child_size (1280, None) mousewheel True draggable True
+                vbox:
+                    spacing 16
+                    for key, title, description, field, goal in awards.DEFINITIONS:
+                        $ unlocked = key in persistent.achievements
+                        $ current = awards.progress(s).get(key, 0) if s else 0
+                        $ best = persistent.achievement_best.get(key, 0)
+                        frame:
+                            xsize 1270 background bordered('#101617') padding (20, 14)
+                            vbox:
+                                spacing 6
+                                text (('已达成  /  ' if unlocked else '未解锁  /  ') + title) size 25 color (INK if unlocked else MUTED)
+                                text description size 20 xsize 1220
+                                text ('本次 %s / %s   /   历史最佳 %s / %s' % (fmt(current), fmt(goal), fmt(best), fmt(goal))) size 17 color MUTED
+            textbutton '返回旅途' xsize 1320 text_xalign .5 action Hide('achievement_archive')
+
+screen knowledge_supply():
+    modal True
+    key 'K_ESCAPE' action Return(('cancel',))
+    add Solid('#000000')
+    frame:
+        xpos 100 ypos 70 xysize (1400, 760) background bordered('#000000') padding (32, 24)
+        vbox:
+            spacing 14
+            text '知识补给 / 先解燃眉之急' size 35
+            text '选择眼下短缺的一种基础物资，答对一道题就补足对应缺口。' size 23
+            text '不限次数，不消耗行动与时间；答错没有惩罚。补给齐全后，需要消耗出新的缺口才能再次领取。' size 19 color MUTED xsize 1320
+            $ shortages = aid.shortfalls(s)
+            if shortages:
+                viewport:
+                    xysize (1325, 465) child_size (1290, None) mousewheel True draggable True
+                    vbox:
+                        spacing 10
+                        for i, offer in enumerate(shortages):
+                            button:
+                                id ('aid_' + offer['item'])
+                                xsize 1280 padding (20, 13) background bordered('#101617')
+                                action Return(('quiz_start', offer['item']))
+                                vbox:
+                                    spacing 5
+                                    text (('当前推荐  /  ' if i == 0 else '') + sim.ITEMS[offer['item']] + ' / 现有 ' + fmt(offer['owned']) + ' → 补足到 ' + fmt(offer['limit']) + '（答对 +' + fmt(offer['amount']) + '）') size 24
+                                    text offer['reason'] size 19 color MUTED
+            else:
+                fixed:
+                    xysize (1325, 465)
+                    text '基础应急储备已经齐全。\n口粮、材料或药品出现新的缺口时，可以再来答题。' xalign .5 yalign .5 size 27 text_align .5 line_spacing 14
+            textbutton '暂时不用，返回旅途' xsize 1320 text_xalign .5 action Return(('cancel',))
+
+screen knowledge_question():
+    modal True
+    key 'K_ESCAPE' action Return(('quiz_cancel',))
+    $ active = s['quiz']
+    $ question = aid.BY_ID[active['id']]
+    add Solid('#000000')
+    frame at rise_in:
+        xpos 150 ypos 90 xysize (1300, 720) background bordered('#000000') padding (35, 28)
+        vbox:
+            spacing 20
+            text ('知识补给 / ' + question['category'] + ' / ' + question['type']) size 22 color MUTED
+            text ('答对可获得：%s +%s' % (sim.ITEMS[active['item']], fmt(active['amount']))) size 31
+            text '答错没有惩罚，也不会消耗行动；提交后会显示答案和解释。' size 20 color MUTED
+            add Solid(LINE) xysize (1220, 1)
+            text question['prompt'] xsize 1210 size 28 line_spacing 10
+            for index, answer_id in enumerate(active['order']):
+                textbutton question['answers'][answer_id]:
+                    id ('answer_' + str(index))
+                    xsize 1220 text_size 25 padding (20, 13)
+                    action Return(('quiz_answer', active['token'], index))
+            textbutton '暂时不答，返回旅途' text_size 20 xsize 1220 action Return(('quiz_cancel',))
+
 screen story_event(e):
     modal True
     $ conversation = e['tag'] == '营火旁'
@@ -549,9 +668,16 @@ screen action_result(report, reviewing=False):
                                 for row in section['rows']:
                                     text row size 22 xsize 630 line_spacing 5
             text '数值按本次实际结算显示；物资与人物状态均已更新。可用滚轮查看，手记中也会保留。' size 17 color MUTED
-            textbutton ('返回' if reviewing else '记下这些，继续 →'):
-                xsize 1416 text_xalign .5 text_size 24 padding (15, 11)
-                action (Hide('action_result') if reviewing else Return())
+            $ can_retry = not reviewing and report.get('kind') == 'quiz_answer' and not report.get('quiz_correct')
+            hbox:
+                spacing 16
+                if can_retry:
+                    textbutton '换一道题再试 / 不消耗行动':
+                        xsize 700 text_size 22 text_xalign .5 padding (15, 11)
+                        action Return(('quiz_retry', report['quiz_target']))
+                textbutton ('返回' if reviewing else '记下这些，继续 →'):
+                    xsize (700 if can_retry else 1416) text_xalign .5 text_size 24 padding (15, 11)
+                    action (Hide('action_result') if reviewing else Return())
 
 screen care_menu(index):
     modal True
@@ -639,6 +765,7 @@ screen pause_menu():
         textbutton "读取自动档" sensitive renpy.can_load('journey') action FileLoad('journey', confirm=False, slot=True)
         textbutton "清晨备份" sensitive renpy.can_load('camp') action FileLoad('camp', confirm=False, slot=True)
         textbutton "旅途手册" action Show('handbook')
+        textbutton "旅途成就" action Show('achievement_archive')
         textbutton "声音与画面" action ShowMenu('preferences_menu')
         textbutton "回到标题" action MainMenu(confirm=False)
     text "F5 快存 / F9 快读 / Esc 返回 / F 全屏" xpos 120 ypos 780 size 20 color MUTED
@@ -749,11 +876,15 @@ label introduction:
     jump survival_loop
 
 label survival_loop:
+    $ sync_achievements()
     $ renpy.save('journey')
     if s.get('feedback'):
         $ play_result_sound(s['feedback']['cue'])
         call screen action_result(s['feedback'])
+        $ result_command = _return
         $ sim.acknowledge_feedback(s)
+        if isinstance(result_command, tuple) and result_command[0] == 'quiz_retry':
+            $ sim.dispatch(s, ('quiz_start', result_command[1]))
         jump survival_loop
     if s['ending']:
         $ mark_ending(s['ending'])
@@ -763,6 +894,10 @@ label survival_loop:
         call screen story_event(s['pending'])
         $ sim.dispatch(s, _return)
         $ sim.tutorial_progress(s, _return)
+        jump survival_loop
+    if s.get('quiz'):
+        call screen knowledge_question
+        $ sim.dispatch(s, _return)
         jump survival_loop
     if s.get('saved_day') != s['day']:
         $ s['saved_day'] = s['day']
@@ -777,6 +912,9 @@ label survival_loop:
         $ cmd = _return
     elif cmd[0] == 'care_menu':
         call screen care_menu(cmd[1])
+        $ cmd = _return
+    elif cmd[0] == 'aid_menu':
+        call screen knowledge_supply
         $ cmd = _return
     if cmd[0] != 'cancel':
         $ sim.dispatch(s, cmd)

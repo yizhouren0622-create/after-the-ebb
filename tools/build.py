@@ -29,11 +29,18 @@ def main():
         raise SystemExit('SDK runtime not found: ' + str(runtime))
     base = [str(runtime), str(sdk / 'renpy.py')]
     env = dict(os.environ, RENPY_LANGUAGE='english')
-    subprocess.run(base + [str(project), 'lint'], check=True, env=env)
     distribute = base + [str(sdk / 'launcher'), 'distribute', str(project),
                          '--destination', str(destination), '--no-update']
-    subprocess.run(distribute + ['--package', 'win', '--package', 'linux'], check=True, env=env)
-    subprocess.run(distribute + ['--package', 'mac', '--format', 'app-zip'], check=True, env=env)
+    log = project / 'tests' / 'build.log'
+    with log.open('w', encoding='utf-8') as output:
+        for label, command in [
+            ('Checking RenPy scripts...', base + [str(project), 'lint']),
+            ('Building Windows and Linux archives...', distribute + ['--package', 'win', '--package', 'linux']),
+            ('Building universal macOS archive...', distribute + ['--package', 'mac', '--format', 'app-zip']),
+        ]:
+            print(label, flush=True)
+            subprocess.run(command, check=True, env=env, stdout=output, stderr=subprocess.STDOUT)
+    print('Desktop packages built in ' + str(destination), flush=True)
 
 
 if __name__ == '__main__':

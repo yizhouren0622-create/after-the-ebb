@@ -133,6 +133,19 @@ def make_report(s, before, command, rules, source=None):
         if title == '不是退潮': notes.append('档案馆还留有未读的资料，继续探索可找到中继站的路线。')
         if title == '仍在工作的接收器': notes.append('灯塔闸门在第 14 日开启；修好接收机后，可回中继站调频。')
         if title == '两行脚印': notes.append('前往灯塔需要海床拖橇，且须等到第 14 日闸门开启。')
+    elif kind == 'quiz_answer':
+        result = s['quiz_last_result']
+        title = '知识补给 / 回答正确' if result['correct'] else '知识补给 / 再想一想'
+        selected = result['selected']
+        name = rules.ITEMS[result['item']]
+        cue = 'search' if result['correct'] else 'page'
+        if result['correct']:
+            description = '我核对好答案，把领到的%s收进行李，又在手记旁补上现在的数量。眼前的缺口总算补上了一些，我和岑苇可以先把原定的事继续做下去。' % name
+        else:
+            description = '我重新读了一遍解释，才弄清刚才没有想明白的地方。这次没有领到补给，但行李和两人的身体状况都没有损失。我把这一点记住，准备换一道题再试。'
+        notes.extend(['题目：' + result['prompt'], '正确答案：' + result['answer'],
+                      '解析：' + result['explanation'],
+                      '答题不消耗行动或时间，也不改变剧情知识与羁绊；答错没有惩罚。'])
     elif kind == 'craft':
         title, selected = '制作完成', rules.RECIPES[command[1]][0]
         description = CRAFT_TEXT[command[1]]
@@ -205,9 +218,13 @@ def make_report(s, before, command, rules, source=None):
     group('新增装备', [rules.RECIPES[k][0] for k in s['gear'] if k not in before['gear']])
     group('新路线', [rules.PLACES[k][0] for k in s['unlocked'] if k not in before['unlocked']])
     group('记住的线索', [FLAG_NAMES.get(k, k) for k in s['flags'] if k not in before['flags']])
-    return {'title': title, 'selected': selected, 'description': description,
+    report = {'title': title, 'selected': selected, 'description': description,
             'groups': groups, 'notes': notes, 'cue': cue, 'figures': figures,
             'day': before['day'], 'kind': kind}
+    if kind == 'quiz_answer':
+        report['quiz_target'] = s['quiz_last_result']['item']
+        report['quiz_correct'] = s['quiz_last_result']['correct']
+    return report
 
 
 def plain_text(report):

@@ -4,6 +4,8 @@ All campaign state lives in a plain dictionary. No network or external services.
 """
 
 import journey_feedback as feedback
+import knowledge_aid as aid
+import achievements
 
 ITEMS = {
     'food': '口粮', 'raw': '生食', 'wood': '木料', 'scrap': '废金属',
@@ -519,8 +521,11 @@ def new_game(loadout='tools', difficulty='standard', seed=27419):
          'pending': None, 'talk_day': 0, 'talks': 0, 'scan': False,
          'last_result': '第 6、7 日寒流；第 12、13 日盐暴。第 18 日日落前抵达灯塔。',
          'tab': 'explore', 'night_count': 0, 'tutorial': 0,
-         'feedback': None, 'last_feedback': None, 'action_origin': None}
+         'feedback': None, 'last_feedback': None, 'action_origin': None,
+         'quiz': None, 'quiz_seen': [], 'quiz_seq': 0, 'quiz_last_result': None,
+         'quiz_seed': seed ^ 0xA17D53}
     log(s, '出发', '海退去了。你们决定一起找到那座仍在报时的灯塔。')
+    achievements.update(s)
     return s
 
 def rng(s, n):
@@ -796,8 +801,12 @@ def tutorial_progress(s, command):
 def _dispatch_action(s, command):
     if s['ending']: return False
     kind = command[0]
+    if kind == 'quiz_answer': return len(command) == 3 and aid.answer(s, command[1], command[2])
+    if kind == 'quiz_cancel': return aid.cancel(s)
+    if s.get('quiz'): return False
     if kind == 'choose': return choose(s, command[1])
     if s['pending']: return False
+    if kind == 'quiz_start': return len(command) == 2 and aid.start(s, command[1])
     if kind == 'explore': return explore(s)
     if kind == 'travel': return travel(s, command[1])
     if kind == 'craft': return craft(s, command[1])
@@ -819,6 +828,8 @@ def dispatch(s, command):
     before = feedback.snapshot(s)
     source = s.get('pending') if command[0] == 'choose' else None
     if not _dispatch_action(s, command): return False
+    newly = achievements.update(s, command, before, source)
+    if command[0] in ['quiz_start', 'quiz_cancel']: return True
     if command[0] in ['explore', 'talk', 'scan'] and s.get('pending'):
         s['action_origin'] = before
         s['feedback'] = None
@@ -826,6 +837,9 @@ def dispatch(s, command):
     if command[0] == 'choose':
         before = s.get('action_origin') or before
     report = feedback.make_report(s, before, command, __import__(__name__), source)
+    if newly:
+        report['groups'].append({'title': '本次旅途达成的成就',
+                                'rows': [achievements.BY_ID[key][1] for key in newly]})
     s['feedback'] = report
     s['last_feedback'] = report
     s['action_origin'] = None
@@ -845,6 +859,10 @@ def acknowledge_feedback(s):
 
 
 def upgrade_state(s):
-    """Keep 1.0/1.1 journeys usable; new fields are all optional defaults."""
-    for key in ['feedback', 'last_feedback', 'action_origin']:
+    """Keep released journeys usable; initialize only missing fields."""
+    for key in ['feedback', 'last_feedback', 'action_origin', 'quiz', 'quiz_last_result']:
         s.setdefault(key, None)
+    s.setdefault('quiz_seen', [])
+    s.setdefault('quiz_seq', 0)
+    s.setdefault('quiz_seed', s['seed'] ^ 0xA17D53)
+    achievements.update(s)
