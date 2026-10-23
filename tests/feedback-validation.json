@@ -1,0 +1,8 @@
+{
+  "checks": 754,
+  "event_branches": 44,
+  "all_recipes": 12,
+  "old_save_migration": true,
+  "actual_clamped_deltas": true,
+  "night_receipt": true
+}

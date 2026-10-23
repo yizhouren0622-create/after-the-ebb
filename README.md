@@ -8,13 +8,13 @@
 
 ## 下载游玩
 
-**[前往 v1.1.0 Release 下载](https://github.com/yizhouren0622-create/after-the-ebb/releases/tag/v1.1.0)**。下载与你的系统相符的运行包，无需另装 Python 或 Ren’Py。
+**[前往 v1.2.0 Release 下载](https://github.com/yizhouren0622-create/after-the-ebb/releases/tag/v1.2.0)**。下载与你的系统相符的运行包，无需另装 Python 或 Ren’Py。
 
 | 平台 | 运行包 | 启动方式 |
 | --- | --- | --- |
-| Windows x86_64 | `AfterTheEbb-1.1-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
-| macOS Intel / Apple Silicon | `AfterTheEbb-1.1-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
-| Linux x86_64 | `AfterTheEbb-1.1-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
+| Windows x86_64 | `AfterTheEbb-1.2-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
+| macOS Intel / Apple Silicon | `AfterTheEbb-1.2-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
+| Linux x86_64 | `AfterTheEbb-1.2-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
 
 保留解压后的完整目录。macOS、Linux 包由 Ren’Py 原生打包，保留执行权限；请直接在对应系统解压，不要经 Windows 解压再压缩后转发。
 
@@ -31,6 +31,8 @@ Windows 已有本机游玩检查；macOS、Linux 尚未完成对应系统的实�
 - **多周目**：3 种行李、2 套难度、12 种制作配方、6 个结局。
 - **快速上手**：七步实操教学，每次只提示当前一步，可以跳过。
 - **默认自动保存**：有效操作后保存最近进度，标题页“继续”直接续玩；另有清晨备份、快速存档、3 个手动档位。
+- **完整行动结果**：选项确认后先读对应的第一人称后续，再查看物资、生命、体力、精神、羁绊、知识、装备和路线的实际变化。结果保存在手记，可随时回看。
+- **原创循环配乐与音效**：一首约 2 分 22 秒的压抑氛围曲贯穿旅途，搭配克制的翻找、脚步、制作、生火和包扎声。
 
 全文采用自然连贯的第一人称中文。界面为黑底白字白细框；人物立绘只在交谈、晚间分餐和治疗选择时出现，使用纯黑背景。
 
@@ -53,9 +55,13 @@ git clone https://github.com/yizhouren0622-create/after-the-ebb.git
 ```sh
 # 无需安装第三方 Python 包：检查生存模拟、结局条件和教学推进
 python tests/test_survival.py
+python tests/test_feedback.py
 
 # 使用本地 SDK 构建 Windows、macOS ZIP、Linux tar.bz2
 python tools/build.py --sdk /path/to/renpy-8.5.3-sdk --out dist
+
+# Windows：使用引擎自身的输入事件做界面、音频状态与存档测试
+python tools/test_engine.py --sdk /path/to/renpy-8.5.3-sdk
 ```
 
 构建脚本默认先执行 Lint，再调用 SDK 自带的发行工具。macOS ZIP 可在 Windows 上生成；DMG、开发者签名和公证不在本次构建范围内。
@@ -65,6 +71,9 @@ python tools/build.py --sdk /path/to/renpy-8.5.3-sdk --out dist
 - [开发说明](开发说明.md)：源码结构与存档规则。
 - [测试记录](测试记录.md)：模拟层和本机窗口检查的范围。
 - [美术与素材说明](美术与素材说明.md)：AI 图像工具、素材提示词与本地合成音频说明。
+- [声音设计](声音设计.md)：原创曲目、音效、开源制作工具及复现方式。
 - [字体许可证](game/fonts/OFL.txt)：Source Han Sans Lite 字体授权。
 
-环境与人物美术由图像生成工具制作；环境声和界面音效为本地合成。Ren’Py 及其依赖的许可证保留在各平台发行包中。
+1.2 延续原存档目录，1.1 的旅途可以继续；旧版本已经执行过的行动没有完整历史数值，详细反馈从更新后的下一次操作开始记录。
+
+环境与人物美术由图像生成工具制作；配乐与音效使用开源音频工具离线创作。Ren’Py 及其依赖的许可证保留在各平台发行包中。

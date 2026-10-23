@@ -1,0 +1,52 @@
+{
+  "checks": 521,
+  "files": {
+    "where_the_sea_was.ogg": {
+      "peak_dbfs": -8.96,
+      "seconds": 142.2222,
+      "seam_dbfs": -63.58
+    },
+    "ui_confirm.wav": {
+      "peak_dbfs": -26.0,
+      "seconds": 0.22
+    },
+    "search.wav": {
+      "peak_dbfs": -20.0,
+      "seconds": 1.6
+    },
+    "footsteps.wav": {
+      "peak_dbfs": -21.0,
+      "seconds": 1.8
+    },
+    "craft.wav": {
+      "peak_dbfs": -23.0,
+      "seconds": 1.5
+    },
+    "cloth.wav": {
+      "peak_dbfs": -24.0,
+      "seconds": 1.4
+    },
+    "eat.wav": {
+      "peak_dbfs": -24.0,
+      "seconds": 1.7
+    },
+    "fire.wav": {
+      "peak_dbfs": -23.0,
+      "seconds": 2.6
+    },
+    "radio.wav": {
+      "peak_dbfs": -25.0,
+      "seconds": 1.9
+    },
+    "page.wav": {
+      "peak_dbfs": -25.0,
+      "seconds": 1.0
+    },
+    "rest.wav": {
+      "peak_dbfs": -26.0,
+      "seconds": 2.2
+    }
+  },
+  "full_volume_peak_bound": 0.5066,
+  "seam_checked_after_ogg_decode": true
+}

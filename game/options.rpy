@@ -1,6 +1,6 @@
 init -20 python:
     config.name = "海退之后"
-    config.version = "1.1.0"
+    config.version = "1.2.0"
     config.save_directory = "AfterTheEbb-1.0-release"
     config.screen_width = 1600
     config.screen_height = 900
@@ -21,10 +21,10 @@ init -20 python:
     config.game_menu_action = ShowMenu("pause_menu")
     config.developer = False
     config.check_conflicting_properties = True
-    config.main_menu_music = "audio/ebb.wav"
+    config.main_menu_music = "audio/where_the_sea_was.ogg"
     config.main_menu_music_fadein = 2.0
     build.name = "AfterTheEbb"
-    build.directory_name = "AfterTheEbb-1.1"
+    build.directory_name = "AfterTheEbb-1.2"
     build.executable_name = "AfterTheEbb"
     build.mac_info_plist = {
         "CFBundleIdentifier": "io.github.yizhouren0622-create.aftertheebb",
@@ -36,8 +36,13 @@ init -20 python:
     build.classify("**~", None)
     build.classify("game/cache/**", None)
     build.classify("game/saves/**", None)
+    build.classify("game/_release_test.*", None)
     build.classify("**/__pycache__/**", None)
     build.classify("tests/**", None)
+    build.classify("tools/**", None)
+    build.classify(".git/**", None)
+    build.classify(".gitignore", None)
+    build.classify(".gitattributes", None)
     build.classify("**.log", None)
     build.classify("log.txt", None)
     build.classify("traceback.txt", None)
@@ -70,8 +75,16 @@ init python:
         stamp = renpy.slot_mtime('manual-' + slot)
         return time.strftime('%Y/%m/%d  %H:%M', time.gmtime(stamp + 8 * 3600)) if stamp else '尚未留下记录'
 
-    def sound_click():
-        renpy.sound.play("audio/click.wav")
+    renpy.music.register_channel('foley', mixer='sfx', loop=False)
+
+    def ensure_music():
+        renpy.music.play('audio/where_the_sea_was.ogg', loop=True,
+                         fadein=2.0, if_changed=True)
+
+    def play_result_sound(cue):
+        # A dedicated channel lets quiet Foley ring without hover interruptions.
+        renpy.music.play('audio/' + cue + '.wav', channel='foley',
+                         loop=False, fadeout=.12, fadein=.025)
 
     def select_tab(tab):
         s['tab'] = tab
@@ -98,7 +111,7 @@ style button:
     hover_background bordered("#334344")
     insensitive_background bordered("#111718")
     padding (18, 12)
-    hover_sound "audio/click.wav"
+    activate_sound "audio/ui_confirm.wav"
 
 style button_text:
     size 23
@@ -170,7 +183,7 @@ screen main_menu():
         textbutton "声音与画面" action ShowMenu("preferences_menu")
         textbutton "离开" action Quit(confirm=False)
     text "一部关于准备、取舍，与两个人如何活下去的生存冒险。" xpos 82 ypos 817 size 18 color MUTED
-    text "原创独立短篇  /  v1.1" xpos 82 ypos 852 size 17 color MUTED
+    text "原创独立短篇  /  v1.2" xpos 82 ypos 852 size 17 color MUTED
 
 screen expedition_setup():
     tag menu
@@ -213,8 +226,8 @@ screen crew_card(p, index):
             text title xpos 20 ypos (83 + i * 43) size 17 color MUTED
             text str(p[key]) xpos 193 ypos (83 + i * 43) size 18 color (RUST if p[key] < 30 else INK)
             bar value StaticValue(p[key], 100) xpos 20 ypos (115 + i * 43) xysize (218, 5) left_bar Solid(RUST if p[key] < 30 else "#c0cbc3")
-        textbutton "进食" xpos 20 ypos 224 text_size 17 padding (13, 3) background bordered("#1b2929") sensitive sim.amt(s, 'food') >= 1 action Return(('use', 'food', index))
-        textbutton "治疗" xpos 104 ypos 224 text_size 17 padding (13, 3) background bordered("#1b2929") sensitive sim.amt(s, 'med') >= 1 action Return(('care_menu', index))
+        textbutton "进食" id ('food_' + str(index)) xpos 20 ypos 224 text_size 17 padding (13, 3) background bordered("#1b2929") sensitive sim.amt(s, 'food') >= 1 action Return(('use', 'food', index))
+        textbutton "治疗" id ('care_' + str(index)) xpos 104 ypos 224 text_size 17 padding (13, 3) background bordered("#1b2929") sensitive sim.amt(s, 'med') >= 1 action Return(('care_menu', index))
 
 screen hub():
     tag game
@@ -288,7 +301,7 @@ screen hub():
                 text loc[2] size 23
                 text "主要发现：" + loc[4] size 18 color MUTED
                 text "已探索 [s['visits'].get(s['loc'], 0)] 次 / 每次消耗 1 行动与两人体力约 10" size 18 color MUTED
-                textbutton "调查周围  →" background bordered(DEEP) text_color INK xsize 710 text_xalign .5 sensitive not sim.outdoor_reason(s) action Return(('explore',))
+                textbutton "调查周围  →" id 'explore_button' background bordered(DEEP) text_color INK xsize 710 text_xalign .5 sensitive not sim.outdoor_reason(s) action Return(('explore',))
                 if s['loc'] == 'relay':
                     textbutton "调频调查 / 1 行动" sensitive not sim.scan_reason(s) action Return(('scan',))
                 if sim.outdoor_reason(s):
@@ -324,6 +337,7 @@ screen hub():
                                 text sim.costs_text(recipe[1]) size 17 color RUST
                                 text recipe[2] size 17 color MUTED
                             textbutton ("已完成" if sim.gear(s, key) else "制作 / 1 行动"):
+                                id ('craft_' + key)
                                 xsize 210 text_size 20
                                 background bordered("#1a2828")
                                 sensitive not reason
@@ -395,7 +409,9 @@ screen hub():
                 text "生食" size 19 xpos 215 ypos 4
                 text fmt(sim.amt(s, 'raw')) size 24 xpos 310
             text "两人一晚吃饱需 2 口粮；半份可节粮，恢复较少。" size 18 color MUTED
-    text s['last_result'] xpos 315 ypos 851 xsize 1050 size 18 color RUST
+    text s['last_result'] xpos 315 ypos 851 xsize 890 size 18 color RUST
+    if s.get('last_feedback'):
+        textbutton '查看上次结果' xpos 1225 ypos 846 text_size 17 padding (9, 4) action Show('action_result', report=s['last_feedback'], reviewing=True)
     text '进度已自动保存' xpos 1410 ypos 855 size 16 color MUTED
 
     if s.get('tutorial', 7) < 7:
@@ -469,6 +485,7 @@ screen night_menu():
                     text p['name'] size 26 xsize 145 yalign .5
                     for val, label in [(1, '一份'), (.5, '半份'), (0, '不吃')]:
                         textbutton label:
+                            id ('ration_%d_%s' % (i, val))
                             xsize 180 background bordered("#182223")
                             selected (r0 if i == 0 else r1) == val
                             action SetScreenVariable('r0' if i == 0 else 'r1', val)
@@ -486,6 +503,55 @@ screen night_menu():
                     xsize 620 background bordered(DEEP) text_color INK text_xalign .5
                     sensitive r0 + r1 <= sim.amt(s, 'food') and (not fire or sim.amt(s, 'fuel') >= 1)
                     action Return(('night', r0, r1, fire))
+
+screen action_result(report, reviewing=False):
+    modal True
+    key 'K_ESCAPE' action (Hide('action_result') if reviewing else Return())
+    if report['figures']:
+        add Solid('#000000')
+        add 'images/travelers.png' xpos 1130 ypos 90 xysize (450, 365)
+    else:
+        $ result_bg = sim.PLACES[s['loc']][3]
+        if report['kind'] in ['craft', 'rest']:
+            add Solid('#000000')
+            $ result_camp = 2 if sim.gear(s, 'shelter2') else 1 if sim.gear(s, 'shelter') else 0
+            add Transform('images/camp-' + str(result_camp) + '.png', xysize=(1600, 460), fit='contain') yalign .5
+        else:
+            add ('images/' + ('shore-final' if result_bg == 'shore' else result_bg) + '.png') xysize (1600, 900)
+        add Solid('#000000bb')
+    frame at rise_in:
+        xpos 55 ypos 42 xysize (1490, 816) background bordered('#000000') padding (34, 25)
+        vbox:
+            spacing 14
+            text ('手记 / 上次结果' if reviewing else '第 %d 日 / 行动结果已自动保存' % report['day']) size 17 color MUTED
+            text report['title'] size 34
+            text ('你的选择：' + report['selected']) size 22 color INK xsize 1390
+            add Solid(LINE) xysize (1416, 1)
+            hbox:
+                spacing 32
+                viewport:
+                    xysize (680, 490) child_size (650, None) mousewheel True draggable True
+                    vbox:
+                        xsize 650 spacing 20
+                        text report['description'] size 26 line_spacing 12 xsize 630
+                        for note in report['notes']:
+                            text note size 20 color MUTED line_spacing 8 xsize 630
+                        if report['figures']:
+                            add 'images/travelers.png' xysize (300, 245) xalign .5
+                viewport:
+                    xysize (690, 490) child_size (655, None) mousewheel True draggable True
+                    vbox:
+                        xsize 655 spacing 14
+                        for section in report['groups']:
+                            vbox:
+                                spacing 5
+                                text section['title'] size 21 color RUST
+                                for row in section['rows']:
+                                    text row size 22 xsize 630 line_spacing 5
+            text '数值按本次实际结算显示；物资与人物状态均已更新。可用滚轮查看，手记中也会保留。' size 17 color MUTED
+            textbutton ('返回' if reviewing else '记下这些，继续 →'):
+                xsize 1416 text_xalign .5 text_size 24 padding (15, 11)
+                action (Hide('action_result') if reviewing else Return())
 
 screen care_menu(index):
     modal True
@@ -585,7 +651,7 @@ screen preferences_menu():
         text "声音与画面" size 48
         text "环境声 / 配乐" size 25
         bar value Preference("music volume") xsize 900
-        text "界面音效" size 25
+        text "动作与界面音效" size 25
         bar value Preference("sound volume") xsize 900
         hbox:
             spacing 30
@@ -678,15 +744,19 @@ label begin_keepsake_gentle:
     jump introduction
 
 label introduction:
-    play music "audio/ebb.wav" fadein 2.0
+    $ ensure_music()
     $ s['pending'] = sim.event('海消失的早晨', opening.INTRO, [sim.choice('一起走下搁浅的渡轮', result='每日 3 行动。先探索找路线，或用木料 3、布料 1 搭营。')], '序 / 第一天')
     jump survival_loop
 
 label survival_loop:
     $ renpy.save('journey')
+    if s.get('feedback'):
+        $ play_result_sound(s['feedback']['cue'])
+        call screen action_result(s['feedback'])
+        $ sim.acknowledge_feedback(s)
+        jump survival_loop
     if s['ending']:
         $ mark_ending(s['ending'])
-        play music "audio/ebb.wav" fadein 1.0
         call screen ending_view(s['ending'])
         return
     if s['pending']:
@@ -714,9 +784,10 @@ label survival_loop:
     jump survival_loop
 
 label before_main_menu:
-    play music "audio/ebb.wav" fadein 2.0
+    $ ensure_music()
     return
 
 label after_load:
-    play music "audio/ebb.wav" fadein 1.0
+    $ sim.upgrade_state(s)
+    $ ensure_music()
     jump survival_loop

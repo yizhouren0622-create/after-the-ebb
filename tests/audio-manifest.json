@@ -1,0 +1,89 @@
+{
+  "sample_rate": 44100,
+  "tools": {
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "soundfile": "0.14.0",
+    "pedalboard": "0.9.26"
+  },
+  "files": {
+    "where_the_sea_was.ogg": {
+      "duration_seconds": 142.2222,
+      "peak_dbfs": -8.96,
+      "rms_dbfs": -24.54,
+      "description": "Original 32-bar 54 BPM score: felt keys, bowed low chords and air; D minor. A complete 142.222 second seamless loop, without drums or scene changes.",
+      "channels": 2,
+      "seam_step_dbfs": -63.58
+    },
+    "ui_confirm.wav": {
+      "duration_seconds": 0.22,
+      "peak_dbfs": -26.0,
+      "rms_dbfs": -38.41,
+      "description": "Soft felt/wood confirmation, activation only.",
+      "channels": 2
+    },
+    "search.wav": {
+      "duration_seconds": 1.6,
+      "peak_dbfs": -20.0,
+      "rms_dbfs": -36.72,
+      "description": "Gloved hands moving cloth and sorting supplies.",
+      "channels": 2
+    },
+    "footsteps.wav": {
+      "duration_seconds": 1.8,
+      "peak_dbfs": -21.0,
+      "rms_dbfs": -38.8,
+      "description": "Three muffled steps over salt and gravel.",
+      "channels": 2
+    },
+    "craft.wav": {
+      "duration_seconds": 1.5,
+      "peak_dbfs": -23.0,
+      "rms_dbfs": -40.44,
+      "description": "Damped wood and metal assembly; no sharp hammer hits.",
+      "channels": 2
+    },
+    "cloth.wav": {
+      "duration_seconds": 1.4,
+      "peak_dbfs": -24.0,
+      "rms_dbfs": -39.51,
+      "description": "Soft cloth tension for sewing, camp and bandages.",
+      "channels": 2
+    },
+    "eat.wav": {
+      "duration_seconds": 1.7,
+      "peak_dbfs": -24.0,
+      "rms_dbfs": -41.52,
+      "description": "Unwrapping a ration and handling a cup, without eating closeups.",
+      "channels": 2
+    },
+    "fire.wav": {
+      "duration_seconds": 2.6,
+      "peak_dbfs": -23.0,
+      "rms_dbfs": -38.73,
+      "description": "A restrained stove flame and soft embers.",
+      "channels": 2
+    },
+    "radio.wav": {
+      "duration_seconds": 1.9,
+      "peak_dbfs": -25.0,
+      "rms_dbfs": -42.42,
+      "description": "Band-limited receiver tuning, with no piercing static.",
+      "channels": 2
+    },
+    "page.wav": {
+      "duration_seconds": 1.0,
+      "peak_dbfs": -25.0,
+      "rms_dbfs": -42.68,
+      "description": "Turning and smoothing a notebook page.",
+      "channels": 2
+    },
+    "rest.wav": {
+      "duration_seconds": 2.2,
+      "peak_dbfs": -26.0,
+      "rms_dbfs": -42.56,
+      "description": "A blanket settling while the pair take shelter.",
+      "channels": 2
+    }
+  }
+}

@@ -3,6 +3,8 @@
 All campaign state lives in a plain dictionary. No network or external services.
 """
 
+import journey_feedback as feedback
+
 ITEMS = {
     'food': '口粮', 'raw': '生食', 'wood': '木料', 'scrap': '废金属',
     'cloth': '布料', 'fuel': '燃料', 'wire': '导线', 'med': '药品',
@@ -516,7 +518,8 @@ def new_game(loadout='tools', difficulty='standard', seed=27419):
          'memories': [], 'ending': None, 'difficulty': difficulty, 'seed': seed,
          'pending': None, 'talk_day': 0, 'talks': 0, 'scan': False,
          'last_result': '第 6、7 日寒流；第 12、13 日盐暴。第 18 日日落前抵达灯塔。',
-         'tab': 'explore', 'night_count': 0, 'tutorial': 0}
+         'tab': 'explore', 'night_count': 0, 'tutorial': 0,
+         'feedback': None, 'last_feedback': None, 'action_origin': None}
     log(s, '出发', '海退去了。你们决定一起找到那座仍在报时的灯塔。')
     return s
 
@@ -790,7 +793,7 @@ def tutorial_progress(s, command):
         s['tutorial'] = 7
         s['last_result'] = '教学完成。每个新区域都值得调查；留够晚餐，留意天气。'
 
-def dispatch(s, command):
+def _dispatch_action(s, command):
     if s['ending']: return False
     kind = command[0]
     if kind == 'choose': return choose(s, command[1])
@@ -805,3 +808,43 @@ def dispatch(s, command):
     if kind == 'night': return night(s, *command[1:])
     if kind == 'finish': return finish(s, command[1])
     return False
+
+
+def dispatch(s, command):
+    """Apply once, then persist a receipt computed from actual state changes.
+
+    Exploring/starting a conversation defers its receipt until the player picks
+    an option. Its original AP/weather/energy costs belong to that same receipt.
+    """
+    before = feedback.snapshot(s)
+    source = s.get('pending') if command[0] == 'choose' else None
+    if not _dispatch_action(s, command): return False
+    if command[0] in ['explore', 'talk', 'scan'] and s.get('pending'):
+        s['action_origin'] = before
+        s['feedback'] = None
+        return True
+    if command[0] == 'choose':
+        before = s.get('action_origin') or before
+    report = feedback.make_report(s, before, command, __import__(__name__), source)
+    s['feedback'] = report
+    s['last_feedback'] = report
+    s['action_origin'] = None
+    s['last_result'] = report['selected'] + '。完整经过与实际变化已记入手记。'
+    text = feedback.plain_text(report)
+    index = before['log_index']
+    if index < len(s['log']):
+        s['log'][index]['text'] = text
+    else:
+        log(s, report['title'], text)
+    return True
+
+
+def acknowledge_feedback(s):
+    """UI dismissal changes no supplies, time, or character statistics."""
+    s['feedback'] = None
+
+
+def upgrade_state(s):
+    """Keep 1.0/1.1 journeys usable; new fields are all optional defaults."""
+    for key in ['feedback', 'last_feedback', 'action_origin']:
+        s.setdefault(key, None)

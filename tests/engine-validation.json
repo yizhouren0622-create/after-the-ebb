@@ -1,0 +1,26 @@
+{
+  "version": "1.2.0",
+  "status": "PASSED",
+  "assertions": 16,
+  "method": "RenPy internal timed screen events, isolated save directory",
+  "screenshots": [
+    "00-hub-before-exploration.png",
+    "01-intro-result.png",
+    "02-explore-result.png",
+    "03-review-result.png",
+    "04-camp-result.png",
+    "05-conversation-result.png",
+    "06-night-result.png",
+    "07-treatment-result.png"
+  ],
+  "scope": [
+    "actual result screens",
+    "music channel playing",
+    "automatic save reload",
+    "no duplicate exploration rewards",
+    "no duplicate night costs",
+    "review without actions",
+    "crafting",
+    "treatment clamped at 100"
+  ]
+}

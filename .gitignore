@@ -11,6 +11,9 @@ log.txt
 traceback.txt
 errors.txt
 screenshots/
+tests/screenshots-*/
+tests/engine-saves/
+game/_release_test.*
 screenshot*.png
 *.bak
 *~
