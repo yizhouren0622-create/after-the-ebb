@@ -1,0 +1,26 @@
+# Ren'Py generated files and local play data
+game/cache/
+game/saves/
+**/__pycache__/
+*.rpyc
+*.pyc
+*.rpyb
+*.save
+*.log
+log.txt
+traceback.txt
+errors.txt
+screenshots/
+screenshot*.png
+*.bak
+*~
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.env
+.env.*
+dist/
+*-dists/
+*.zip
+*.tar.bz2

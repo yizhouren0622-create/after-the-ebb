@@ -1,0 +1,61 @@
+{
+  "checks": 130388,
+  "random_campaigns": 250,
+  "guaranteed_route_day": 14,
+  "ending_conditions": [
+    [
+      "逆相发声器",
+      true
+    ],
+    [
+      "档案馆修正公式",
+      true
+    ],
+    [
+      "中继站实时频率",
+      true
+    ],
+    [
+      "羁绊达到 55",
+      true
+    ],
+    [
+      "两人生命均不低于 25",
+      true
+    ],
+    [
+      "两人精神均不低于 30",
+      true
+    ]
+  ],
+  "route_inventory": {
+    "food": 11.0,
+    "raw": 18,
+    "wood": 1,
+    "scrap": 1,
+    "cloth": 0,
+    "fuel": 2,
+    "wire": 2,
+    "med": 4,
+    "core": 0,
+    "battery": 0
+  },
+  "crew": [
+    {
+      "name": "梁弦",
+      "role": "录音师 / 27",
+      "hp": 100,
+      "energy": 85,
+      "sanity": 96,
+      "hurt": false
+    },
+    {
+      "name": "岑苇",
+      "role": "轮机工 / 26",
+      "hp": 100,
+      "energy": 85,
+      "sanity": 96,
+      "hurt": false
+    }
+  ]
+}
