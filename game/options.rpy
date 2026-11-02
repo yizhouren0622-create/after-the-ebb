@@ -1,6 +1,6 @@
 init -20 python:
     config.name = "海退之后"
-    config.version = "1.3.0"
+    config.version = "1.4.0"
     config.save_directory = "AfterTheEbb-1.0-release"
     config.screen_width = 1600
     config.screen_height = 900
@@ -24,7 +24,7 @@ init -20 python:
     config.main_menu_music = "audio/where_the_sea_was.ogg"
     config.main_menu_music_fadein = 2.0
     build.name = "AfterTheEbb"
-    build.directory_name = "AfterTheEbb-1.3"
+    build.directory_name = "AfterTheEbb-1.4"
     build.executable_name = "AfterTheEbb"
     build.mac_info_plist = {
         "CFBundleIdentifier": "io.github.yizhouren0622-create.aftertheebb",
@@ -50,10 +50,14 @@ init -20 python:
     build.classify("game/**", "all")
     build.classify("*.txt", "all")
     build.classify("*.md", "all")
+    build.classify("美术提示词1.4.json", "all")
 
 default persistent.endings = []
 default persistent.achievements = []
 default persistent.achievement_best = {}
+default persistent.story_records = {}
+default persistent.quick_seen = False
+default persistent.ending_texts = {}
 default s = None
 
 init python:
@@ -61,6 +65,7 @@ init python:
     import opening
     import knowledge_aid as aid
     import achievements as awards
+    import keepsakes
     import time
     PAPER = "#080b0c"
     INK = "#e4e7e2"
@@ -97,11 +102,16 @@ init python:
         renpy.restart_interaction()
 
     def mark_ending(key):
+        persistent.ending_texts[key] = sim.ending_text(s, key)
         if key not in persistent.endings:
             persistent.endings.append(key)
-            renpy.save_persistent()
+        renpy.save_persistent()
 
     def sync_achievements():
+        records = keepsakes.merge_records(persistent.story_records, s.get('feedback'))
+        if records != persistent.story_records:
+            persistent.story_records = records
+            renpy.save_persistent()
         earned, best, newly = awards.merge(persistent.achievements, persistent.achievement_best, s)
         if earned != persistent.achievements or best != persistent.achievement_best:
             persistent.achievements = earned
@@ -176,6 +186,7 @@ screen main_menu():
     tag menu
     add "images/shore-final.png" xysize (1600, 900)
     add Solid("#080b0ce8") xsize 640
+    use title_keepsakes
     add Solid(RUST) xpos 82 ypos 110 xysize (45, 4)
     vbox:
         xpos 80 ypos 152 spacing 12
@@ -183,7 +194,7 @@ screen main_menu():
         text "海退之后" size 82 color INK
         text "海消失的第十八天，\n连告别也将不再有声音。" size 24 color MUTED line_spacing 10
     vbox:
-        xpos 68 ypos 430 spacing 4
+        xpos 68 ypos 400 spacing 4
         textbutton "开始一段旅途  →" action ShowMenu("expedition_setup") text_size 29
         if renpy.can_load("journey"):
             textbutton "继续 / 自动存档" action FileLoad("journey", confirm=False, slot=True)
@@ -196,20 +207,21 @@ screen main_menu():
             textbutton "旅途手册" action Show("handbook")
             textbutton ("旅途成就 / %d" % len(persistent.achievements)) action Show('achievement_archive')
         textbutton "留下的回声  /  [len(persistent.endings)] / 6" action ShowMenu("ending_archive")
+        textbutton "拾到的片段 / 区域手记" text_size 21 action Show('story_archive')
         hbox:
             spacing 12
             textbutton "声音与画面" action ShowMenu("preferences_menu")
             textbutton "离开" action Quit(confirm=False)
-    text "一部关于准备、取舍，与两个人如何活下去的生存冒险。" xpos 82 ypos 817 size 18 color MUTED
-    text "原创独立短篇  /  v1.3" xpos 82 ypos 852 size 17 color MUTED
+    text "两只行李袋，一条走到灯塔的路。" xpos 82 ypos 817 size 18 color MUTED
+    text "原创独立短篇  /  v1.4" xpos 82 ypos 852 size 17 color MUTED
 
 screen expedition_setup():
     tag menu
-    default mode = "standard"
+    default mode = "gentle"
     default bag = "tools"
     add Solid(PAPER)
     text "出发之前" xpos 110 ypos 75 size 50
-    text "你带不走全部的昨天。选一件行李，再决定如何走过这段路。" xpos 112 ypos 145 size 24 color MUTED
+    text "第一次游玩推荐「余温」。选好行李，跟着首日教学即可出发。" xpos 112 ypos 145 size 24 color MUTED
     hbox:
         xpos 110 ypos 235 spacing 24
         for key, num, name, desc in [("tools", "01", "修理工的工具袋", "口粮 6 / 木料 3 / 金属 3\n导线 1 / 布料 1 / 燃料 2\n\n适合尽快搭营与制作工具。"), ("rations", "02", "渡轮的应急箱", "口粮 11 / 药品 1 / 生食 2\n木料 1 / 布料 1 / 燃料 2\n\n多一些余地，慢慢摸清路线。"), ("keepsake", "03", "没寄出的旅行包", "口粮 7 / 布料 3 / 导线 2\n木料 1 / 燃料 2 / 初始羁绊 60\n\n里面装着旧信和珍藏的录音。")]:
@@ -227,9 +239,29 @@ screen expedition_setup():
         xpos 110 ypos 587 spacing 24
         textbutton "求生 / 困难" action SetScreenVariable("mode", "standard") selected mode == "standard"
         textbutton "余温 / 补给更充裕，环境伤害较低" action SetScreenVariable("mode", "gentle") selected mode == "gentle"
-    text "每局最多 18 天，每天 3 行动。随机事件不重复抽取直至事件池轮完。\n关键线索固定获得；没有战斗操作。每次行动后自动保存，新游戏自带教学。" xpos 128 ypos 660 size 21 color MUTED line_spacing 9
+    text "每天 3 行动，每晚两人共需 2 份口粮。每次行动后自动保存。\n区域中有可回访的支线；已选过的后续会留在标题页的区域手记中。" xpos 128 ypos 660 size 21 color MUTED line_spacing 9
+    textbutton "已读场景简读" xpos 110 ypos 733 text_size 19 padding (14, 5) selected persistent.quick_seen action ToggleField(persistent, 'quick_seen')
     textbutton "← 返回" xpos 110 ypos 790 action ShowMenu("main_menu")
     textbutton "带上行李，出发  →" xpos 1115 ypos 785 background bordered(DEEP) text_color INK text_hover_color "#e9b5a8" action Start("begin_" + bag + "_" + mode)
+
+screen recipe_row(key, recipe):
+    $ reason = sim.recipe_reason(s, key)
+    hbox:
+        spacing 15
+        vbox:
+            xsize 490 spacing 3
+            text recipe[0] size 23
+            text sim.costs_text(recipe[1]) size 17 color RUST
+            text recipe[2] size 17 color MUTED
+        textbutton ("已完成" if sim.gear(s, key) else "制作 / 1 行动"):
+            id ('craft_' + key)
+            xsize 210 text_size 20
+            background bordered("#1a2828")
+            sensitive not reason
+            action Return(('craft', key))
+    if reason and reason != '已完成':
+        text reason size 16 color RUST
+    add Solid(LINE) xysize (710, 1)
 
 screen crew_card(p, index):
     fixed:
@@ -249,6 +281,7 @@ screen crew_card(p, index):
 
 screen hub():
     tag game
+    default craft_filter = 'ready'
     key "K_ESCAPE" action ShowMenu('pause_menu')
     key "K_f" action ToggleField(_preferences, 'fullscreen')
     key "K_F5" action QuickSave()
@@ -290,7 +323,7 @@ screen hub():
             add Solid('#000000')
             add Transform('images/camp-' + str(camp_stage) + '.png', xysize=(1268, 280), fit='contain') xalign .5
         else:
-            add Transform(Crop((0, 300, 1672, 500), "images/" + ("shore-final" if loc[3] == "shore" else loc[3]) + ".png"), xysize=(1268, 280)) matrixcolor (TintMatrix("#b6c8d4") if loc[3] != 'shore' else IdentityMatrix())
+            add Crop((0, 180, 1268, 280), Transform("images/" + ("shore-final" if loc[3] == "shore" else loc[3]) + ".png", xysize=(1268, 714)))
         add Solid("#080b0cbf") ypos 180 ysize 100
         text ('CAMP / LEVEL ' + str(camp_stage) if camp_view else loc[1]) xpos 26 ypos 192 size 16 color "#dde5df" kerning 2
         text (camp_names[camp_stage] if camp_view else loc[0]) xpos 24 ypos 220 size 37 color INK
@@ -303,18 +336,13 @@ screen hub():
         xpos 306 ypos 439 spacing 5
         for tab, label in [('explore', '探索'), ('camp', '营地'), ('craft', '制作'), ('map', '路线'), ('bag', '背包'), ('journal', '手记')]:
             textbutton label:
-                xsize 153 ysize 49
+                xsize 175 ysize 49
                 background bordered(DEEP if s['tab'] == tab else "#141e1f")
                 text_color INK
                 text_xalign .5
                 action Function(select_tab, tab)
         if s['difficulty'] == 'standard':
-            textbutton '知识补给' id 'knowledge_aid' text_size 20 xsize 120 padding (12, 12) action Return(('aid_menu',))
-            textbutton '成就' text_size 20 xsize 80 padding (12, 12) action Show('achievement_archive')
-            textbutton '快存' text_size 19 xsize 85 padding (12, 12) action QuickSave()
-        else:
-            textbutton '旅途成就' text_size 20 xsize 160 action Show('achievement_archive')
-            textbutton '快速存档' text_size 18 xsize 130 action QuickSave()
+            textbutton '知识补给' id 'knowledge_aid' text_size 20 xsize 180 padding (12, 12) action Return(('aid_menu',))
 
     frame:
         xpos 306 ypos 503 xysize (806, 331)
@@ -324,7 +352,7 @@ screen hub():
                 spacing 14
                 text loc[2] size 23
                 text "主要发现：" + loc[4] size 18 color MUTED
-                text "已探索 [s['visits'].get(s['loc'], 0)] 次 / 每次消耗 1 行动与两人体力约 10" size 18 color MUTED
+                text (sim.region_progress(s) + '  /  每次调查用 1 行动') size 18 color MUTED
                 textbutton "调查周围  →" id 'explore_button' background bordered(DEEP) text_color INK xsize 710 text_xalign .5 sensitive not sim.outdoor_reason(s) action Return(('explore',))
                 if s['loc'] == 'relay':
                     textbutton "调频调查 / 1 行动" sensitive not sim.scan_reason(s) action Return(('scan',))
@@ -347,28 +375,21 @@ screen hub():
                 else:
                     text "营地为可携带篷布，移动时自动随行。" size 18 color MUTED
         elif s['tab'] == 'craft':
-            viewport:
-                xysize (754, 291) child_size (730, None) mousewheel True draggable True
-                vbox:
-                    spacing 13
-                    for key, recipe in sim.RECIPES.items():
-                        $ reason = sim.recipe_reason(s, key)
-                        hbox:
-                            spacing 15
-                            vbox:
-                                xsize 490 spacing 3
-                                text recipe[0] size 23
-                                text sim.costs_text(recipe[1]) size 17 color RUST
-                                text recipe[2] size 17 color MUTED
-                            textbutton ("已完成" if sim.gear(s, key) else "制作 / 1 行动"):
-                                id ('craft_' + key)
-                                xsize 210 text_size 20
-                                background bordered("#1a2828")
-                                sensitive not reason
-                                action Return(('craft', key))
-                        if reason and reason != '已完成':
-                            text reason size 16 color RUST
-                        add Solid(LINE) xysize (710, 1)
+            vbox:
+                spacing 12
+                hbox:
+                    spacing 10
+                    for value, label in [('ready', '可制作'), ('all', '全部配方'), ('done', '已完成')]:
+                        textbutton label text_size 18 padding (14, 6) selected craft_filter == value action SetScreenVariable('craft_filter', value)
+                viewport:
+                    xysize (754, 242) child_size (730, None) mousewheel True draggable True
+                    vbox:
+                        spacing 13
+                        for key, recipe in sim.RECIPES.items():
+                            if (craft_filter == 'all' or craft_filter == 'ready' and not sim.recipe_reason(s, key) or craft_filter == 'done' and sim.gear(s, key)):
+                                use recipe_row(key, recipe)
+                        if craft_filter == 'ready' and not any(not sim.recipe_reason(s, key) for key in sim.RECIPES):
+                            text '暂时没有可制作的物品。\n切换“全部配方”查看缺少的材料。' size 23 xsize 700 color MUTED
         elif s['tab'] == 'map':
             viewport:
                 xysize (754, 291) child_size (730, None) mousewheel True draggable True
@@ -418,7 +439,7 @@ screen hub():
         vbox:
             spacing 14
             text "接下来" size 18 color RUST
-            text sim.objective(s) size 23
+            text sim.recommendation(s) size 23
             add Solid("#87928b") xysize (395, 1)
             fixed:
                 xysize (395, 42)
@@ -552,6 +573,7 @@ screen knowledge_question():
 
 screen story_event(e):
     modal True
+    default show_full = False
     $ conversation = e['tag'] == '营火旁'
     if conversation:
         add Solid('#000000')
@@ -571,7 +593,13 @@ screen story_event(e):
             viewport:
                 xysize (1000, 370) mousewheel True draggable True
                 child_size (965, None)
-                text e['text'] size 24 line_spacing 10 xsize 965 color INK
+                if persistent.quick_seen and keepsakes.seen(persistent.story_records, e['title']) and not show_full:
+                    vbox:
+                        spacing 20
+                        text '这段经过已收进区域手记。可以直接选择，也可以展开重读。' size 24 xsize 950 color MUTED
+                        textbutton '展开完整正文' action SetScreenVariable('show_full', True)
+                else:
+                    text e['text'] size 24 line_spacing 10 xsize 965 color INK
             for index, c in enumerate(e['choices']):
                 button:
                     xsize 1000 background bordered("#111a1b") padding (20, 10)
@@ -579,7 +607,7 @@ screen story_event(e):
                     action Return(('choose', index))
                     vbox:
                         spacing 1
-                        text c['text'] size 22
+                        text (c['text'] + ('  / 已选' if keepsakes.seen(persistent.story_records, e['title'], index) else '')) size 22
                         if sim.choice_hint(c):
                             text sim.choice_hint(c) size 16 color RUST
             text "可用滚轮阅读正文" size 16 color MUTED
@@ -614,7 +642,16 @@ screen night_menu():
             $ protection = int(sim.gear(s, 'shelter')) + int(sim.gear(s, 'shelter2')) + int(sim.gear(s, 'coats')) + int(fire)
             $ damage = max(0, sim.weather(s)[2] - protection) * (4 if s['difficulty'] == 'gentle' else 7)
             text ("今晚保暖充足。" if damage == 0 else "预计失温：两人各失去生命 %d。" % damage) size 23 color RUST
-            text "营地额外恢复体力；接收机恢复精神。生火：精神 +5、保暖 +1。" size 19 color MUTED
+            $ preview = sim.night_preview(s, r0, r1, fire)
+            if preview:
+                for i, person in enumerate(preview['crew']):
+                    text ('%s  清晨预计生命 %d / 体力 %d / 精神 %d' % (person['name'], person['hp'], person['energy'], person['sanity'])) size 20 color (RUST if person['hp'] < 25 or person['sanity'] < 25 else MUTED)
+                if preview['ending']:
+                    text '按当前分配，这将是旅途的最后一夜。可以返回调整。' size 20 color RUST
+            else:
+                text '当前物资不够分配，请减少口粮或取消生火。' size 20 color RUST
+            if s['ap'] > 0:
+                text ('还有 %d 次行动，确认过夜后将放弃。' % s['ap']) size 19 color RUST
             hbox:
                 spacing 20
                 textbutton "再想一想" action Return(('cancel',)) xsize 280
@@ -705,7 +742,7 @@ screen final_menu():
         xalign .5 yalign .5 xsize 1100 padding (45, 30) background bordered(PAPER)
         vbox:
             spacing 15
-            text "世界不只有一种答案" size 37
+            text "灯塔控制台" size 37
             text "最后的选择会结束这段旅途。你们可以先返回准备。" size 20 color MUTED
             for title, ok in sim.true_requirements(s):
                 text (('+  ' if ok else '○  ') + title) size 22 color (INK if ok else RUST)
@@ -760,15 +797,18 @@ screen pause_menu():
                         textbutton "保存" sensitive not main_menu action FileSave(slot, confirm=False, page="manual")
                         textbutton "读取" sensitive renpy.can_load('manual-' + slot) action FileLoad(slot, confirm=False, page="manual")
     hbox:
-        xpos 105 ypos 720 spacing 25
+        xpos 105 ypos 710 spacing 20
         textbutton "继续" action Return()
         textbutton "读取自动档" sensitive renpy.can_load('journey') action FileLoad('journey', confirm=False, slot=True)
         textbutton "清晨备份" sensitive renpy.can_load('camp') action FileLoad('camp', confirm=False, slot=True)
         textbutton "旅途手册" action Show('handbook')
-        textbutton "旅途成就" action Show('achievement_archive')
         textbutton "声音与画面" action ShowMenu('preferences_menu')
+    hbox:
+        xpos 105 ypos 780 spacing 20
+        textbutton "旅途成就" action Show('achievement_archive')
+        textbutton "区域手记" action Show('story_archive')
         textbutton "回到标题" action MainMenu(confirm=False)
-    text "F5 快存 / F9 快读 / Esc 返回 / F 全屏" xpos 120 ypos 780 size 20 color MUTED
+    text "F5 快存 / F9 快读 / Esc 返回 / F 全屏" xpos 1015 ypos 798 size 19 color MUTED
 
 screen preferences_menu():
     tag menu
@@ -784,6 +824,7 @@ screen preferences_menu():
             spacing 30
             textbutton "窗口" action Preference('display', 'window')
             textbutton "全屏" action Preference('display', 'fullscreen')
+        textbutton "已读场景简读" selected persistent.quick_seen action ToggleField(persistent, 'quick_seen')
         textbutton "返回" action (ShowMenu("main_menu") if main_menu else ShowMenu("pause_menu"))
 
 screen ending_view(key):
@@ -796,7 +837,7 @@ screen ending_view(key):
         text sim.ENDINGS[key][1] size 43
         viewport:
             xysize (810, 565) child_size (780, None) mousewheel True draggable True
-            text sim.ENDINGS[key][2] size 23 line_spacing 10 xsize 775
+            text sim.ending_text(s, key) size 23 line_spacing 10 xsize 775
         text "这段旅途已记入「留下的回声」。" size 18 color MUTED
         hbox:
             spacing 18
@@ -808,7 +849,7 @@ screen ending_archive():
     default selected = None
     add Solid(PAPER)
     text "留下的回声" xpos 110 ypos 75 size 48
-    text "每一种抵达，都曾是某个人的全部。" xpos 113 ypos 147 size 23 color MUTED
+    text "这里保存已经抵达的结局。" xpos 113 ypos 147 size 23 color MUTED
     vbox:
         xpos 105 ypos 230 spacing 14
         for key, entry in sim.ENDINGS.items():
@@ -822,7 +863,7 @@ screen ending_archive():
             vbox:
                 spacing 20
                 text sim.ENDINGS[selected][1] size 32 color RUST
-                text sim.ENDINGS[selected][2] size 22
+                text persistent.ending_texts.get(selected, sim.ENDINGS[selected][2]) size 22
 
 screen confirm(message, yes_action, no_action):
     modal True

@@ -8,6 +8,82 @@ init 100 python:
 screen _qa_command(command):
     timer .02 action [Hide('_qa_command'), Return(command)]
 
+testcase storybook_release:
+    run Start('begin_tools_standard')
+    pause until screen 'story_event'
+    $ persistent.story_records = {}
+    run Show('_qa_command', command=('choose', 0))
+    pause until screen 'action_result'
+    assert eval (keepsakes.seen(persistent.story_records, '海消失的早晨', 0))
+    run Show('_qa_command', command=True)
+    pause until screen 'hub'
+    $ s['tutorial'] = 7
+    run Function(select_tab, 'craft')
+    click "全部配方"
+    click "可制作"
+    pause .3
+    screenshot '20-ready-crafting.png'
+    click id 'craft_shelter'
+    pause until screen 'action_result'
+    assert eval ('shelter' in s['gear'] and s['ap'] == 2)
+    run Show('_qa_command', command=True)
+    pause until screen 'hub'
+    $ s.update(loc='clinic', visits={'clinic': 1}, tab='explore')
+    run Function(renpy.restart_interaction)
+    pause .3
+    screenshot '21-clinic-hub.png'
+    run Show('_qa_command', command=('explore',))
+    pause until screen 'story_event'
+    pause .3
+    screenshot '22-queue-story.png'
+    assert eval (s['pending']['title'] == '二十七号')
+    run Show('_qa_command', command=('choose', 0))
+    pause until screen 'action_result'
+    assert eval ('queue_names' in s['flags'])
+    assert eval (keepsakes.seen(persistent.story_records, '二十七号', 0))
+    run FileLoad('journey', confirm=False, slot=True)
+    pause until screen 'action_result'
+    assert eval (s['flags'].count('queue_names') == 1 and s['ap'] == 1)
+    run Show('_qa_command', command=True)
+    pause until screen 'hub'
+    run Show('story_archive')
+    pause until screen 'story_archive'
+    click "白窗诊所"
+    click "二十七号"
+    pause .3
+    screenshot '23-region-archive.png'
+    run Hide('story_archive')
+    run Show('_qa_command', command=('night_menu',))
+    pause until screen 'night_menu'
+    pause .3
+    screenshot '24-night-preview.png'
+    assert eval (sim.night_preview(s, 1, 1, False)['crew'][0]['hp'] == 95)
+    run Show('_qa_command', command=('cancel',))
+    pause until screen 'hub'
+    $ s['loc'] = 'library'
+    run Function(renpy.restart_interaction)
+    pause .3
+    screenshot '25-archive-hub.png'
+    $ s['loc'] = 'relay'
+    run Function(renpy.restart_interaction)
+    pause .3
+    screenshot '26-relay-hub.png'
+    $ s['loc'] = 'flats'
+    run Function(renpy.restart_interaction)
+    pause .3
+    screenshot '27-seabed-hub.png'
+    $ persistent.achievements = [row[0] for row in awards.DEFINITIONS]
+    run MainMenu(confirm=False)
+    pause until screen 'main_menu'
+    pause .6
+    screenshot '28-title-all-keepsakes.png'
+    assert eval (len(keepsakes.unlocked(persistent.achievements)) == 8)
+    run Show('keepsake_detail', row=keepsakes.OBJECTS[0])
+    pause until screen 'keepsake_detail'
+    pause .3
+    screenshot '29-mugs-detail.png'
+    assert eval (renpy.music.get_playing() == 'audio/where_the_sea_was.ogg')
+
 testcase feedback_release:
     run Start('begin_tools_standard')
     pause until screen 'story_event'

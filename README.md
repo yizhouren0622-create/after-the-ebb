@@ -8,17 +8,23 @@
 
 ## 下载游玩
 
-**[前往 v1.3.0 Release 下载](https://github.com/yizhouren0622-create/after-the-ebb/releases/tag/v1.3.0)**。下载与你的系统相符的运行包，无需另装 Python 或 Ren’Py。
+**[前往 v1.4.0 Release 下载](https://github.com/yizhouren0622-create/after-the-ebb/releases/tag/v1.4.0)**。下载与你的系统相符的运行包，无需另装 Python 或 Ren’Py。
 
 | 平台 | 运行包 | 启动方式 |
 | --- | --- | --- |
-| Windows x86_64 | `AfterTheEbb-1.3-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
-| macOS Intel / Apple Silicon | `AfterTheEbb-1.3-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
-| Linux x86_64 | `AfterTheEbb-1.3-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
+| Windows x86_64 | `AfterTheEbb-1.4-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
+| macOS Intel / Apple Silicon | `AfterTheEbb-1.4-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
+| Linux x86_64 | `AfterTheEbb-1.4-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
 
 保留解压后的完整目录。macOS、Linux 包由 Ren’Py 原生打包，保留执行权限；请直接在对应系统解压，不要经 Windows 解压再压缩后转发。
 
 Windows 已有本机游玩检查；macOS、Linux 尚未完成对应系统的实机游玩验证。macOS 本次未进行开发者证书签名和 Apple 公证。
+
+## 1.4 更新
+
+[完整更新说明](版本1.4.md)：英文底稿与直接中文译文、18 段营火对话、5 段回访支线、4 张独立区域背景、8 组可解锁标题纪念物、跨周目区域手记、已读简读、制作筛选和晚餐状态预览。
+
+建议新开旅途体验新版叙事。旧存档、成就和原有配乐保留。
 
 ## 这是什么游戏
 
@@ -59,6 +65,8 @@ git clone https://github.com/yizhouren0622-create/after-the-ebb.git
 python tests/test_survival.py
 python tests/test_feedback.py
 python tests/test_knowledge_achievements.py
+python tests/test_storybook.py
+python tools/check_font.py
 
 # 使用本地 SDK 构建 Windows、macOS ZIP、Linux tar.bz2
 python tools/build.py --sdk /path/to/renpy-8.5.3-sdk --out dist
@@ -66,6 +74,7 @@ python tools/build.py --sdk /path/to/renpy-8.5.3-sdk --out dist
 # Windows：使用引擎自身的输入事件做界面、音频状态与存档测试
 python tools/test_engine.py --sdk /path/to/renpy-8.5.3-sdk
 python tools/test_engine.py --sdk /path/to/renpy-8.5.3-sdk --case knowledge_achievements_release
+python tools/test_engine.py --sdk /path/to/renpy-8.5.3-sdk --case storybook_release
 ```
 
 构建脚本默认先执行 Lint，再调用 SDK 自带的发行工具。macOS ZIP 可在 Windows 上生成；DMG、开发者签名和公证不在本次构建范围内。

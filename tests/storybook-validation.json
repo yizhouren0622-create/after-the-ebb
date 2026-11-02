@@ -1,0 +1,11 @@
+{
+  "status": "PASSED",
+  "checks": 1195,
+  "new_threads": 5,
+  "english_chinese_scene_pairs": 51,
+  "night_forecast_scenarios": 288,
+  "one_time_branch_rewards": true,
+  "reading_records_survive_replay": true,
+  "old_save_migration": true,
+  "title_objects": 8
+}

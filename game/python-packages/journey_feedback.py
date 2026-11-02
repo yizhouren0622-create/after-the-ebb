@@ -102,6 +102,8 @@ FLAG_NAMES = {'archive': '寂潮工程记录', 'counterphase': '双节律修正�
               'tower_seen': '灯塔最终抉择已开放', 'live_signal': '实时校准频率',
               'helped': '为门后的幸存者留下口粮'}
 
+FLAG_NAMES.update({'door_return': '门后幸存者的回赠', 'queue_names': '候诊名单', 'queue_stopped': '停止循环的取号机', 'red_terminal': '标出的异常端子', 'archive_box': '整理过的档案储物盒', 'terminal_fixed': '断开的异常端子', 'safe_crossing': '布条标记的海床捷径'})
+
 
 def number(value):
     return str(int(value)) if value == int(value) else '%g' % value
@@ -124,7 +126,7 @@ def make_report(s, before, command, rules, source=None):
         title = source['title']
         selected = source['choices'][command[1]]['text']
         texts = RESPONSES.get(title)
-        description = texts[command[1]] if texts else '我和岑苇照商量好的办法处理完这件事，将能用的东西收好，再把经过记进手记。'
+        description = source['choices'][command[1]].get('narrative') or (texts[command[1]] if texts else '我合上行李，岑苇在门口等我。')
         figures = source['tag'] == '营火旁'
         cue = 'page' if figures or title == '海消失的早晨' else 'search'
         if title == '不是回声': cue = 'radio'
@@ -153,7 +155,9 @@ def make_report(s, before, command, rules, source=None):
         notes.append(rules.RECIPES[command[1]][2])
     elif kind == 'travel':
         title, selected, cue = '转移营地', '前往' + rules.PLACES[s['loc']][0], 'footsteps'
-        description = '我和岑苇沿着记好的路线离开%s，抵达%s后，先把行李放到背风处。等她检查好周围，我才解开背包的绳结，将随身的营地重新安置下来。这一带还得慢慢调查，至少今晚的落脚方向已经清楚了。' % (rules.PLACES[before['loc']][0], rules.PLACES[s['loc']][0])
+        description = '我把%s的最后一处拐角标在图上，跟着岑苇走到%s。她先放下包，压住地布的一角，我解开另一头的绳子。' % (rules.PLACES[before['loc']][0], rules.PLACES[s['loc']][0])
+        if rules.has(s, 'safe_crossing') and (s['loc'] in ['flats', 'tower'] or before['loc'] in ['flats', 'tower']):
+            notes.append('沿布条标记的路穿行：这次移动的基础体力消耗减少 2。')
     elif kind == 'use':
         name = s['crew'][command[2]]['name']
         title = '处理伤口' if command[1] == 'med' else '补充食物'
@@ -167,7 +171,7 @@ def make_report(s, before, command, rules, source=None):
         notes.append('这次补给不消耗行动；状态最多恢复到 100，下方显示本次实际变化。')
     elif kind == 'rest':
         title, selected, cue = '稍作休息', '轮流守望，留在营地休息', 'rest'
-        description = '我和岑苇轮流守着行李，让另一个人把眼睛闭上一会儿。等我重新站起来，腿上那阵沉重已经减轻不少，脑子也不再只想着赶路。我把背包挪回身边，和她商量接下来该先做哪件事。'
+        description = '我把背包垫在头下，岑苇坐到门边。轮到我守时，她把靴子脱下来，袜子搭在膝上。我替她挪开一块硌脚的石头。'
     elif kind == 'night':
         title, selected, figures = '这一夜过去以后', '分配晚餐并过夜', True
         cue = 'fire' if command[3] else 'rest'
@@ -176,8 +180,11 @@ def make_report(s, before, command, rules, source=None):
         description += ('我给自己留了%s口粮。' % portions[command[1]] if command[1] else '我没有给自己留口粮。')
         description += ('岑苇分到了%s口粮。' % portions[command[2]] if command[2] else '岑苇没有分到口粮。')
         description += ('我们在背风处生起火，轮流照看火苗，等衣服不再那么冰冷，才慢慢躺下。' if command[3] else '我收好剩下的行李，和她挨着躺下，尽量把迎风的空隙压紧。')
+        import storybook
         if not s['ending']:
-            description += '清晨醒来时，我先确认她还在身边，再翻开手记，重新清点今天能够带走的东西。'
+            description += '\n\n' + storybook.night_text(s, before['day'])
+        if not s['ending']:
+            description += '清晨，我重新清点行李，把手记放回袋口。'
         else:
             description += '夜越来越深，我仍攥着她的手，等着远处的灯再亮一次。'
         notes.append('当天剩余的 %s 行动在入夜后作废。' % before['ap'])
@@ -190,7 +197,7 @@ def make_report(s, before, command, rules, source=None):
         if any(p['hurt'] for p in before['crew']): notes.append('尚未处理的伤口在夜间使相应人物再失去 3 点生命。')
     elif kind == 'finish':
         title, selected, cue = '最后的选择', rules.ENDINGS[s['ending']][1], 'radio'
-        description = '我合上一路带来的手记，和岑苇再次确认了我们的决定。那些来不及准备的事已经没有办法重来，我只把最后需要的东西放到伸手就能拿到的位置，陪她走完接下来的这一步。'
+        description = '我把图纸压在控制台上，将用得上的东西放到手边。岑苇收紧围巾的结，等我过去。'
     else:
         title, selected, cue = '没能继续走下去', '调查周围', 'footsteps'
         description = '我原本还想继续往前，身体却已经不再听使唤。岑苇扶我坐下，我看着脚边的行李，终于明白这一趟不能再靠咬牙撑过去。'
@@ -221,6 +228,11 @@ def make_report(s, before, command, rules, source=None):
     report = {'title': title, 'selected': selected, 'description': description,
             'groups': groups, 'notes': notes, 'cue': cue, 'figures': figures,
             'day': before['day'], 'kind': kind}
+    if kind == 'choose' and source:
+        report['scene'] = {'title': source['title'], 'text': source['text'],
+                           'tag': source['tag'], 'loc': before['loc'],
+                           'choices': [c['text'] for c in source['choices']],
+                           'index': command[1], 'result': description}
     if kind == 'quiz_answer':
         report['quiz_target'] = s['quiz_last_result']['item']
         report['quiz_correct'] = s['quiz_last_result']['correct']

@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--sdk', type=Path, required=True)
     parser.add_argument('--case', default='feedback_release',
-                        choices=['feedback_release', 'knowledge_achievements_release'])
+                        choices=['feedback_release', 'knowledge_achievements_release', 'storybook_release'])
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     sdk = args.sdk.resolve()
@@ -26,7 +26,8 @@ def main():
     target = root / 'game' / '_release_test.rpy'
     if target.exists():
         raise SystemExit('Refusing to overwrite ' + str(target))
-    target.write_bytes((root / 'tests' / 'engine_smoke.rpy').read_bytes())
+    target.write_text((root / 'tests' / 'engine_smoke.rpy').read_text('utf-8').replace(
+        "screenshots-1.3", 'screenshots-' + short_version), 'utf-8')
     try:
         process = subprocess.Popen([str(runtime), str(sdk / 'renpy.py'), str(root), 'test',
                         args.case, '--overwrite-screenshots', '--report-detailed',
@@ -59,7 +60,8 @@ def main():
             (root / 'tests' / 'engine-validation.log').write_text(''.join(transcript), 'utf-8')
         if not passed: raise SystemExit('Engine screen test failed; see tests/engine-validation.log')
         knowledge_case = args.case == 'knowledge_achievements_release'
-        result_name = 'engine-knowledge-validation.json' if knowledge_case else 'engine-validation.json'
+        story_case = args.case == 'storybook_release'
+        result_name = 'engine-storybook-validation.json' if story_case else 'engine-knowledge-validation.json' if knowledge_case else 'engine-validation.json'
         scope = (['saved question and answer order', 'wrong answer without penalty',
                   'retry and deficit-only reward', 'full emergency supplies',
                   'achievement archive and cross-campaign persistence', 'gentle mode excludes aid']
@@ -67,12 +69,16 @@ def main():
                  ['actual result screens', 'music channel playing', 'automatic save reload',
                   'no duplicate exploration rewards', 'no duplicate night costs',
                   'review without actions', 'crafting', 'treatment clamped at 100'])
+        if story_case:
+            scope = ['new region backgrounds in actual engine', 'one-time story branch save reload',
+                     'reading archive and seen choices', 'real night preview',
+                     'title SVG objects for all achievements', 'keepsake detail', 'simplified craft page']
         (root / 'tests' / result_name).write_text(json.dumps({
             'status': 'PASSED', 'version': version, 'test_selection': args.case,
             'assertions': int(re.search(r'Assertions\s*:\s*(\d+)', ''.join(transcript)).group(1)),
             'method': 'RenPy internal timed screen events, isolated save directory',
             'screenshots': sorted(p.name for p in (root / 'tests' / ('screenshots-' + short_version)).glob('*.png')
-                                  if (int(p.name[:2]) >= 10) == knowledge_case),
+                                  if (int(p.name[:2]) // 10) == (2 if story_case else 1 if knowledge_case else 0)),
             'scope': scope
         }, indent=2) + '\n', 'utf-8')
     finally:

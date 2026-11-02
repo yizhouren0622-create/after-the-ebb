@@ -1,0 +1,28 @@
+{
+  "status": "PASSED",
+  "version": "1.4.0",
+  "test_selection": "storybook_release",
+  "assertions": 9,
+  "method": "RenPy internal timed screen events, isolated save directory",
+  "screenshots": [
+    "20-ready-crafting.png",
+    "21-clinic-hub.png",
+    "22-queue-story.png",
+    "23-region-archive.png",
+    "24-night-preview.png",
+    "25-archive-hub.png",
+    "26-relay-hub.png",
+    "27-seabed-hub.png",
+    "28-title-all-keepsakes.png",
+    "29-mugs-detail.png"
+  ],
+  "scope": [
+    "new region backgrounds in actual engine",
+    "one-time story branch save reload",
+    "reading archive and seen choices",
+    "real night preview",
+    "title SVG objects for all achievements",
+    "keepsake detail",
+    "simplified craft page"
+  ]
+}
