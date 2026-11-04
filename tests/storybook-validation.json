@@ -1,8 +1,8 @@
 {
   "status": "PASSED",
-  "checks": 1195,
+  "checks": 1068,
   "new_threads": 5,
-  "english_chinese_scene_pairs": 51,
+  "chinese_scene_texts": 51,
   "night_forecast_scenarios": 288,
   "one_time_branch_rewards": true,
   "reading_records_survive_replay": true,

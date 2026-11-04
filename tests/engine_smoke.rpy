@@ -3,7 +3,7 @@ init 100 python:
     from renpy.test.testsettings import _test
     _test.timeout = 50.0
     _test.focus_trials = 5
-    _test.screenshot_directory = 'tests/screenshots-1.3'
+    _test.screenshot_directory = 'tests/screenshots-@VERSION@'
 
 screen _qa_command(command):
     timer .02 action [Hide('_qa_command'), Return(command)]
@@ -24,10 +24,9 @@ testcase storybook_release:
     pause .3
     screenshot '20-ready-crafting.png'
     click id 'craft_shelter'
-    pause until screen 'action_result'
-    assert eval ('shelter' in s['gear'] and s['ap'] == 2)
-    run Show('_qa_command', command=True)
     pause until screen 'hub'
+    assert eval ('shelter' in s['gear'] and s['ap'] == 2)
+    assert eval (s['feedback'] is None and s['last_feedback']['kind'] == 'craft')
     $ s.update(loc='clinic', visits={'clinic': 1}, tab='explore')
     run Function(renpy.restart_interaction)
     pause .3
@@ -72,6 +71,29 @@ testcase storybook_release:
     run Function(renpy.restart_interaction)
     pause .3
     screenshot '27-seabed-hub.png'
+    $ s.update(loc='shore', day=11, ap=3, tab='bag', unlocked=['shore', 'town'])
+    $ s['inv'].update(food=3.5, med=0)
+    run Function(renpy.restart_interaction)
+    pause .25
+    assert eval (renpy.get_widget('hub', 'bag_food') is not None and renpy.get_widget('hub', 'bag_med') is None)
+    assert eval (salt_storm_notice(s['day']) == '距盐暴还有 1 天')
+    screenshot '30-bag-and-storm-countdown.png'
+    $ s.update(day=12, tab='camp')
+    run Function(renpy.restart_interaction)
+    pause .25
+    assert eval (salt_storm_notice(s['day']) == '风暴中' and renpy.get_widget('hub', 'salt_storm_notice') is not None)
+    click id 'camp_rest'
+    pause until screen 'hub'
+    assert eval (s['last_feedback']['kind'] == 'rest' and s['ap'] == 2 and s['feedback'] is None)
+    screenshot '31-rest-during-storm.png'
+    $ s.update(day=14, tab='map')
+    run Function(renpy.restart_interaction)
+    pause .25
+    assert eval (renpy.get_widget('hub', 'salt_storm_notice') is None)
+    click id 'travel_town'
+    pause until screen 'hub'
+    assert eval (s['loc'] == 'town' and s['ap'] == 1 and s['last_feedback']['kind'] == 'travel')
+    screenshot '32-travel-after-storm.png'
     $ persistent.achievements = [row[0] for row in awards.DEFINITIONS]
     run MainMenu(confirm=False)
     pause until screen 'main_menu'
@@ -116,19 +138,28 @@ testcase feedback_release:
     screenshot '03-review-result.png'
     run Hide('action_result')
     pause until screen 'hub'
-    run Show('_qa_command', command=('craft', 'shelter'))
-    pause until screen 'action_result'
+    run Function(select_tab, 'craft')
+    click id 'craft_shelter'
+    pause until screen 'hub'
     pause .4
     screenshot '04-camp-result.png'
     assert eval ('shelter' in s['gear'] and s['ap'] == 1)
     assert eval (s['inv']['wood'] == 2 and s['inv']['cloth'] == 1)
-    run Show('_qa_command', command=True)
+    assert eval (s['feedback'] is None and renpy.get_widget('hub', 'routine_result_description') is not None)
+    run FileLoad('journey', confirm=False, slot=True)
     pause until screen 'hub'
-    run Show('_qa_command', command=('use', 'food', 0))
+    assert eval (s['inv']['wood'] == 2 and s['ap'] == 1 and s['feedback'] is None)
+    click id 'dismiss_routine_result'
+    assert eval (renpy.get_widget('hub', 'routine_result_description') is None)
+    click id 'review_last_result'
     pause until screen 'action_result'
-    assert eval (s['inv']['food'] == 5 and s['ap'] == 1)
-    run Show('_qa_command', command=True)
+    assert eval (s['last_feedback']['kind'] == 'craft' and s['ap'] == 1)
+    click "返回"
     pause until screen 'hub'
+    click id 'food_0'
+    pause until screen 'hub'
+    assert eval (s['inv']['food'] == 5 and s['ap'] == 1)
+    assert eval (s['last_feedback']['kind'] == 'use' and s['feedback'] is None)
     run Show('_qa_command', command=('talk',))
     pause until screen 'story_event'
     run Show('_qa_command', command=('choose', 0))
@@ -218,11 +249,9 @@ testcase knowledge_achievements_release:
     run Show('_qa_command', command=('cancel',))
     pause until screen 'hub'
     $ s['crew'][0]['hp'] = 4
-    run Show('_qa_command', command=('use', 'food', 1))
-    pause until screen 'action_result'
-    assert eval ('edge' in persistent.achievements)
-    run Show('_qa_command', command=True)
+    click id 'food_1'
     pause until screen 'hub'
+    assert eval ('edge' in persistent.achievements and s['last_feedback']['kind'] == 'use')
     run Hide('achievement_toast')
     run Show('achievement_archive')
     pause until screen 'achievement_archive'

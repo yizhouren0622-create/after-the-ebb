@@ -18,11 +18,14 @@ def check(condition, message):
     checks += 1
     assert condition, message
 
-for collection in [book.TEXT, book.TALKS, book.ENDINGS, book.NIGHTS, book.TALK_RESULTS]:
-    for title, pair in collection.items():
-        check(len(pair) == 2 and all(pair), 'Missing draft/translation: ' + title)
-        check(any('a' <= c.lower() <= 'z' for c in pair[0]), 'English draft missing')
-        check(any('\u4e00' <= c <= '\u9fff' for c in pair[1]), 'Chinese translation missing')
+def chinese(text):
+    return isinstance(text, str) and any('\u4e00' <= c <= '\u9fff' for c in text)
+
+for collection in [book.TEXT, book.TALKS, book.ENDINGS, book.PARTNER_ENDINGS, book.NIGHTS, book.TALK_RESULTS]:
+    for title, text in collection.items():
+        check(chinese(text), 'Missing Chinese text: ' + title)
+for title, texts in book.RESULTS.items():
+    check(all(chinese(text) for text in texts) and bool(texts), 'Missing Chinese response: ' + title)
 
 # Every authored branch has a result, including both choices in the new stories.
 for row in book.THREADS:
@@ -39,7 +42,7 @@ for row in book.THREADS:
         check(s['ap'] == 2, 'Encounter charged wrong AP')
         restored = pickle.loads(pickle.dumps(s))
         check(g.dispatch(restored, ('choose', index)), 'Cannot choose branch')
-        check(restored['feedback']['description'] == row['options'][index][4], 'Generic result')
+        check(restored['feedback']['description'] == row['options'][index][3], 'Generic result')
         record = keepsakes.merge_records({}, restored['feedback'])
         check(keepsakes.seen(record, row['title'], index), 'Chosen result not recorded')
         check(not keepsakes.seen(record, row['title'], 1-index) if len(row['options']) == 2 else True, 'Invented other result')
@@ -89,10 +92,10 @@ check(not keepsakes.unlocked([]), 'Objects available without achievements')
 check(len(book.TALKS) == 18, 'Conversations repeat before the eighteen-day deadline')
 for field, key in [('hp', 'lost'), ('sanity', 'drift')]:
     s = g.new_game(); s['crew'][1][field] = 0
-    check(g.ending_text(s, key) == book.PARTNER_ENDINGS[key][1], 'Narrator incorrectly takes partner condition')
+    check(g.ending_text(s, key) == book.PARTNER_ENDINGS[key], 'Narrator incorrectly takes partner condition')
 
 result = {'status': 'PASSED', 'checks': checks, 'new_threads': len(book.THREADS),
-          'english_chinese_scene_pairs': len(book.TEXT) + len(book.TALKS) + len(book.ENDINGS),
+          'chinese_scene_texts': len(book.TEXT) + len(book.TALKS) + len(book.ENDINGS),
           'night_forecast_scenarios': 4 * 2 * 2 * 3 * 3 * 2,
           'one_time_branch_rewards': True, 'reading_records_survive_replay': True,
           'old_save_migration': True, 'title_objects': 8}

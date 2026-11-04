@@ -19,7 +19,6 @@ def main():
     root = Path(__file__).resolve().parents[1]
     sdk = args.sdk.resolve()
     version = re.search(r'config.version = "([^"]+)"', (root / 'game' / 'options.rpy').read_text('utf-8')).group(1)
-    short_version = '.'.join(version.split('.')[:2])
     candidates = list((sdk / 'lib').glob('py3-*/python.exe'))
     candidates += list((sdk / 'lib').glob('py3-*/python'))
     runtime = next(p for p in candidates if ('windows' in str(p)) == (os.name == 'nt'))
@@ -27,7 +26,7 @@ def main():
     if target.exists():
         raise SystemExit('Refusing to overwrite ' + str(target))
     target.write_text((root / 'tests' / 'engine_smoke.rpy').read_text('utf-8').replace(
-        "screenshots-1.3", 'screenshots-' + short_version), 'utf-8')
+        '@VERSION@', version), 'utf-8')
     try:
         process = subprocess.Popen([str(runtime), str(sdk / 'renpy.py'), str(root), 'test',
                         args.case, '--overwrite-screenshots', '--report-detailed',
@@ -68,17 +67,19 @@ def main():
                  if knowledge_case else
                  ['actual result screens', 'music channel playing', 'automatic save reload',
                   'no duplicate exploration rewards', 'no duplicate night costs',
-                  'review without actions', 'crafting', 'treatment clamped at 100'])
+                  'inline craft and food results, reload without repeating costs',
+                  'review without actions', 'treatment clamped at 100'])
         if story_case:
             scope = ['new region backgrounds in actual engine', 'one-time story branch save reload',
                      'reading archive and seen choices', 'real night preview',
-                     'title SVG objects for all achievements', 'keepsake detail', 'simplified craft page']
+                     'title SVG objects for all achievements', 'keepsake detail', 'simplified craft page',
+                     'stocked bag items, storm countdown, inline rest and travel']
         (root / 'tests' / result_name).write_text(json.dumps({
             'status': 'PASSED', 'version': version, 'test_selection': args.case,
             'assertions': int(re.search(r'Assertions\s*:\s*(\d+)', ''.join(transcript)).group(1)),
             'method': 'RenPy internal timed screen events, isolated save directory',
-            'screenshots': sorted(p.name for p in (root / 'tests' / ('screenshots-' + short_version)).glob('*.png')
-                                  if (int(p.name[:2]) // 10) == (2 if story_case else 1 if knowledge_case else 0)),
+            'screenshots': sorted(p.name for p in (root / 'tests' / ('screenshots-' + version)).glob('*.png')
+                                  if (int(p.name[:2]) // 10) in ({2, 3} if story_case else {1} if knowledge_case else {0})),
             'scope': scope
         }, indent=2) + '\n', 'utf-8')
     finally:

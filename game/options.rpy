@@ -1,6 +1,6 @@
 init -20 python:
     config.name = "海退之后"
-    config.version = "1.4.0"
+    config.version = "1.4.1"
     config.save_directory = "AfterTheEbb-1.0-release"
     config.screen_width = 1600
     config.screen_height = 900
@@ -24,7 +24,7 @@ init -20 python:
     config.main_menu_music = "audio/where_the_sea_was.ogg"
     config.main_menu_music_fadein = 2.0
     build.name = "AfterTheEbb"
-    build.directory_name = "AfterTheEbb-1.4"
+    build.directory_name = "AfterTheEbb-1.4.1"
     build.executable_name = "AfterTheEbb"
     build.mac_info_plist = {
         "CFBundleIdentifier": "io.github.yizhouren0622-create.aftertheebb",
@@ -79,6 +79,18 @@ init python:
 
     def fmt(n):
         return str(int(n)) if n == int(n) else str(n)
+
+    BAG_SECTIONS = (('食物', ('food', 'raw')), ('材料', ('wood', 'scrap', 'cloth', 'fuel', 'wire', 'core', 'battery')), ('药品', ('med',)))
+
+    def salt_storm_notice(day):
+        if day < 12:
+            return '距盐暴还有 %d 天' % (12 - day)
+        if day <= 13:
+            return '风暴中'
+        return ''
+
+    def is_routine_result(report):
+        return not report['figures'] and report['kind'] in ('craft', 'rest', 'travel', 'use')
 
     def saved_time(slot):
         stamp = renpy.slot_mtime('manual-' + slot)
@@ -279,9 +291,10 @@ screen crew_card(p, index):
         textbutton "进食" id ('food_' + str(index)) xpos 20 ypos 224 text_size 17 padding (13, 3) background bordered("#1b2929") sensitive sim.amt(s, 'food') >= 1 action Return(('use', 'food', index))
         textbutton "治疗" id ('care_' + str(index)) xpos 104 ypos 224 text_size 17 padding (13, 3) background bordered("#1b2929") sensitive sim.amt(s, 'med') >= 1 action Return(('care_menu', index))
 
-screen hub():
+screen hub(routine_report=None):
     tag game
     default craft_filter = 'ready'
+    default show_routine = routine_report is not None
     key "K_ESCAPE" action ShowMenu('pause_menu')
     key "K_f" action ToggleField(_preferences, 'fullscreen')
     key "K_F5" action QuickSave()
@@ -329,7 +342,9 @@ screen hub():
         text (camp_names[camp_stage] if camp_view else loc[0]) xpos 24 ypos 220 size 37 color INK
         $ w = sim.weather(s)
         text w[0] xpos 1022 ypos 202 size 26 color INK
-        text "风暴：12–13 日" xpos 1022 ypos 242 size 16 color "#dde5df"
+        $ storm_notice = salt_storm_notice(s['day'])
+        if storm_notice:
+            text storm_notice id 'salt_storm_notice' xpos 1022 ypos 242 size 16 color "#dde5df"
     text w[1] xpos 327 ypos 399 size 20 color RUST
 
     hbox:
@@ -366,7 +381,7 @@ screen hub():
                 text "火还亮着的时候" size 27
                 hbox:
                     spacing 16
-                    textbutton "轮流休息 / 1 行动" background bordered("#1a2828") sensitive s['ap'] > 0 action Return(('rest',))
+                    textbutton "轮流休息 / 1 行动" id 'camp_rest' background bordered("#1a2828") sensitive s['ap'] > 0 action Return(('rest',))
                     textbutton "说会儿话 / 1 行动" background bordered("#1a2828") sensitive s['ap'] > 0 and s['talk_day'] != s['day'] action Return(('talk',))
                 text "休息：体力 +20，精神 +4。营地可进一步增加恢复。\n交谈：精神 +12，羁绊 +7，每天一次。" size 18 color MUTED
                 textbutton "分配晚餐，结束今天  →" action Return(('night_menu',))
@@ -399,6 +414,7 @@ screen hub():
                         $ found = key in s['unlocked']
                         $ reason = sim.travel_reason(s, key)
                         button:
+                            id ('travel_' + key)
                             xsize 722 padding (14, 10)
                             background bordered("#182223" if s['loc'] == key else "#101819")
                             sensitive found and not reason
@@ -415,8 +431,21 @@ screen hub():
                 vbox:
                     spacing 12
                     text "共同的行李" size 27
-                    for key, name in sim.ITEMS.items():
-                        text (name + '    ' + fmt(sim.amt(s, key))) size 22
+                    $ bag_has_items = False
+                    for category, keys in BAG_SECTIONS:
+                        $ stocked = [key for key in keys if sim.amt(s, key) > 0]
+                        if stocked:
+                            $ bag_has_items = True
+                            hbox:
+                                spacing 12
+                                text category size 18 color RUST xsize 72 ypos 3
+                                hbox:
+                                    spacing 10 box_wrap True box_wrap_spacing 6 xmaximum 640
+                                    for key in stocked:
+                                        text (sim.ITEMS[key] + ' ' + fmt(sim.amt(s, key))) id ('bag_' + key) size 22 min_width 130
+                    if not bag_has_items:
+                        text "包里没有物资了。" size 20 color MUTED
+                    add Solid(LINE) xysize (722, 1)
                     text "已经制作的装备" size 24
                     text (' / '.join(sim.RECIPES[k][0] for k in s['gear']) or '还没有装备。先用木料与布料搭营。') size 20 color MUTED
         elif s['tab'] == 'journal':
@@ -436,27 +465,13 @@ screen hub():
     frame:
         xpos 1130 ypos 503 xysize (444, 331)
         background bordered("#182223") padding (23, 20)
-        vbox:
-            spacing 14
-            text "接下来" size 18 color RUST
-            text sim.recommendation(s) size 23
-            add Solid("#87928b") xysize (395, 1)
-            fixed:
-                xysize (395, 42)
-                text "口粮" size 19 ypos 4
-                text fmt(sim.amt(s, 'food')) size 24 xpos 88
-                text "药品" size 19 xpos 215 ypos 4
-                text fmt(sim.amt(s, 'med')) size 24 xpos 310
-            fixed:
-                xysize (395, 42)
-                text "燃料" size 19 ypos 4
-                text fmt(sim.amt(s, 'fuel')) size 24 xpos 88
-                text "生食" size 19 xpos 215 ypos 4
-                text fmt(sim.amt(s, 'raw')) size 24 xpos 310
-            text "两人一晚吃饱需 2 口粮；半份可节粮，恢复较少。" size 18 color MUTED
+        if show_routine and routine_report:
+            use routine_summary(routine_report)
+        else:
+            use supply_summary
     text s['last_result'] xpos 315 ypos 851 xsize 890 size 18 color RUST
     if s.get('last_feedback'):
-        textbutton '查看上次结果' xpos 1225 ypos 846 text_size 17 padding (9, 4) action Show('action_result', report=s['last_feedback'], reviewing=True)
+        textbutton '查看上次结果' id 'review_last_result' xpos 1225 ypos 846 text_size 17 padding (9, 4) action Show('action_result', report=s['last_feedback'], reviewing=True)
     text '进度已自动保存' xpos 1410 ypos 855 size 16 color MUTED
 
     if s.get('tutorial', 7) < 7:
@@ -475,6 +490,43 @@ screen hub():
                 text ('上手教学 %d / 7：%s' % (s['tutorial'] + 1, guide[0])) size 24 color INK
                 text guide[1] size 21 xsize 860 color MUTED
             textbutton '跳过教学' xpos 735 ypos 106 text_size 17 padding (8, 2) action SetDict(s, 'tutorial', 7)
+
+screen routine_summary(report):
+    vbox:
+        spacing 10
+        fixed:
+            xysize (396, 34)
+            text report['title'] id 'routine_result_title' size 22 color RUST ypos 3
+            textbutton '收起' id 'dismiss_routine_result' xalign 1.0 text_size 16 padding (11, 4) action SetScreenVariable('show_routine', False)
+        text report['description'] id 'routine_result_description' size 21 xsize 390 line_spacing 4
+        add Solid(LINE) xysize (395, 1)
+        viewport:
+            xsize 396 yfill True child_size (386, None) mousewheel True draggable True
+            vbox:
+                spacing 7
+                for section in report['groups']:
+                    if section['rows'] not in (['本次没有获得或消耗物资。'], ['生命、体力、精神均未改变。']):
+                        text (section['title'] + '：' + '；'.join(section['rows'])) size 17 xsize 382 line_spacing 3 color INK
+
+screen supply_summary():
+    vbox:
+        spacing 14
+        text "接下来" size 18 color RUST
+        text sim.recommendation(s) size 23
+        add Solid("#87928b") xysize (395, 1)
+        fixed:
+            xysize (395, 42)
+            text "口粮" size 19 ypos 4
+            text fmt(sim.amt(s, 'food')) size 24 xpos 88
+            text "药品" size 19 xpos 215 ypos 4
+            text fmt(sim.amt(s, 'med')) size 24 xpos 310
+        fixed:
+            xysize (395, 42)
+            text "燃料" size 19 ypos 4
+            text fmt(sim.amt(s, 'fuel')) size 24 xpos 88
+            text "生食" size 19 xpos 215 ypos 4
+            text fmt(sim.amt(s, 'raw')) size 24 xpos 310
+        text "两人一晚吃饱需 2 口粮；半份可节粮，恢复较少。" size 18 color MUTED
 
 screen achievement_toast(titles):
     zorder 150
@@ -919,14 +971,19 @@ label introduction:
 label survival_loop:
     $ sync_achievements()
     $ renpy.save('journey')
+    $ routine_report = None
     if s.get('feedback'):
         $ play_result_sound(s['feedback']['cue'])
-        call screen action_result(s['feedback'])
-        $ result_command = _return
-        $ sim.acknowledge_feedback(s)
-        if isinstance(result_command, tuple) and result_command[0] == 'quiz_retry':
-            $ sim.dispatch(s, ('quiz_start', result_command[1]))
-        jump survival_loop
+        if not s['ending'] and is_routine_result(s['feedback']):
+            $ routine_report = s['feedback']
+            $ sim.acknowledge_feedback(s)
+        else:
+            call screen action_result(s['feedback'])
+            $ result_command = _return
+            $ sim.acknowledge_feedback(s)
+            if isinstance(result_command, tuple) and result_command[0] == 'quiz_retry':
+                $ sim.dispatch(s, ('quiz_start', result_command[1]))
+            jump survival_loop
     if s['ending']:
         $ mark_ending(s['ending'])
         call screen ending_view(s['ending'])
@@ -943,7 +1000,7 @@ label survival_loop:
     if s.get('saved_day') != s['day']:
         $ s['saved_day'] = s['day']
         $ renpy.save('camp')
-    call screen hub
+    call screen hub(routine_report)
     $ cmd = _return
     if cmd[0] == 'night_menu':
         call screen night_menu

@@ -8,21 +8,21 @@
 
 ## 下载游玩
 
-**[前往 v1.4.0 Release 下载](https://github.com/yizhouren0622-create/after-the-ebb/releases/tag/v1.4.0)**。下载与你的系统相符的运行包，无需另装 Python 或 Ren’Py。
+**[前往 GitHub Releases 下载](https://github.com/yizhouren0622-create/after-the-ebb/releases/latest)**。下载与你的系统相符的运行包，无需另装 Python 或 Ren’Py。
 
 | 平台 | 运行包 | 启动方式 |
 | --- | --- | --- |
-| Windows x86_64 | `AfterTheEbb-1.4-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
-| macOS Intel / Apple Silicon | `AfterTheEbb-1.4-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
-| Linux x86_64 | `AfterTheEbb-1.4-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
+| Windows x86_64 | `AfterTheEbb-1.4.1-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
+| macOS Intel / Apple Silicon | `AfterTheEbb-1.4.1-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
+| Linux x86_64 | `AfterTheEbb-1.4.1-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
 
 保留解压后的完整目录。macOS、Linux 包由 Ren’Py 原生打包，保留执行权限；请直接在对应系统解压，不要经 Windows 解压再压缩后转发。
 
 Windows 已有本机游玩检查；macOS、Linux 尚未完成对应系统的实机游玩验证。macOS 本次未进行开发者证书签名和 Apple 公证。
 
-## 1.4 更新
+## 1.4.1 更新
 
-[完整更新说明](版本1.4.md)：英文底稿与直接中文译文、18 段营火对话、5 段回访支线、4 张独立区域背景、8 组可解锁标题纪念物、跨周目区域手记、已读简读、制作筛选和晚餐状态预览。
+[完整更新说明](版本1.4.1.md)：开场、探索、营火交谈和结局改为直接写成的口语中文。制作、休息、进食和移动的结果在操作页就能看到。背包按类别显示现有物资，盐暴提示会随日期更新。[1.4 的更新记录](版本1.4.md)仍可查阅。
 
 建议新开旅途体验新版叙事。旧存档、成就和原有配乐保留。
 
@@ -37,7 +37,7 @@ Windows 已有本机游玩检查；macOS、Linux 尚未完成对应系统的实�
 - **多周目**：3 种行李、2 套难度、12 种制作配方、6 个结局。
 - **快速上手**：七步实操教学，每次只提示当前一步，可以跳过。
 - **默认自动保存**：有效操作后保存最近进度，标题页“继续”直接续玩；另有清晨备份、快速存档、3 个手动档位。
-- **完整行动结果**：选项确认后先读对应的第一人称后续，再查看物资、生命、体力、精神、羁绊、知识、装备和路线的实际变化。结果保存在手记，可随时回看。
+- **完整行动结果**：制作、休息、进食和移动后，右侧会显示发生的事和实际变化，可以直接进行下一步。剧情选择、答题、治疗和过夜有完整结果页。行动结果都会写进手记，也可用“查看上次结果”回看。
 - **原创循环配乐与音效**：一首约 2 分 22 秒的压抑氛围曲贯穿旅途，搭配克制的翻找、脚步、制作、生火和包扎声。
 - **知识补给**：求生模式下选择短缺物资，回答选择或判断题。答对补足应急缺口，答错无惩罚，不消耗行动，也没有每日次数限制；32 题含解释。
 - **16 项旅途成就**：连续谈心、囤粮、濒危后恢复、挺过天气等，条件与进度可查，解锁和历史最佳跨周目保留。

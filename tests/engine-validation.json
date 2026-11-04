@@ -1,8 +1,8 @@
 {
   "status": "PASSED",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "test_selection": "feedback_release",
-  "assertions": 16,
+  "assertions": 21,
   "method": "RenPy internal timed screen events, isolated save directory",
   "screenshots": [
     "00-hub-before-exploration.png",
@@ -20,8 +20,8 @@
     "automatic save reload",
     "no duplicate exploration rewards",
     "no duplicate night costs",
+    "inline craft and food results, reload without repeating costs",
     "review without actions",
-    "crafting",
     "treatment clamped at 100"
   ]
 }

@@ -1,8 +1,8 @@
 {
   "status": "PASSED",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "test_selection": "storybook_release",
-  "assertions": 9,
+  "assertions": 16,
   "method": "RenPy internal timed screen events, isolated save directory",
   "screenshots": [
     "20-ready-crafting.png",
@@ -14,7 +14,10 @@
     "26-relay-hub.png",
     "27-seabed-hub.png",
     "28-title-all-keepsakes.png",
-    "29-mugs-detail.png"
+    "29-mugs-detail.png",
+    "30-bag-and-storm-countdown.png",
+    "31-rest-during-storm.png",
+    "32-travel-after-storm.png"
   ],
   "scope": [
     "new region backgrounds in actual engine",
@@ -23,6 +26,7 @@
     "real night preview",
     "title SVG objects for all achievements",
     "keepsake detail",
-    "simplified craft page"
+    "simplified craft page",
+    "stocked bag items, storm countdown, inline rest and travel"
   ]
 }

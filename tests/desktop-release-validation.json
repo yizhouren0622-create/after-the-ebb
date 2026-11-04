@@ -1,41 +1,43 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "packages": [
     {
       "platform": "Windows",
-      "filename": "AfterTheEbb-1.4-win.zip",
-      "bytes": 69984914,
-      "sha256": "ecaea17e691731e397fce2a36fbdef32f5d0cc808e962dd71bb3b5300f1ce9dd",
+      "filename": "AfterTheEbb-1.4.1-win.zip",
+      "bytes": 69983314,
+      "sha256": "6350ec77333beec7151b3e58a3600cc9a05dd412ee8e81bf471d41b7121715d6",
       "architecture": [
         "x86_64"
       ],
-      "files": 1753
+      "files": 1613,
+      "verified_payload_files": 47
     },
     {
       "platform": "macOS",
-      "filename": "AfterTheEbb-1.4-mac.zip",
-      "bytes": 78063219,
-      "sha256": "f1ca86262b01fb66d545b52f0abfb4b447175b8cbbd2eecd1bda6db6ca2752fc",
-      "app_launcher": "AfterTheEbb.app/Contents/MacOS/AfterTheEbb",
-      "launcher_mode": "0o100755",
+      "filename": "AfterTheEbb-1.4.1-mac.zip",
+      "bytes": 78054710,
+      "sha256": "b7622a3ecdeb2fbeafef34c0e30376171b185aaa9d338cb6e8a8abf674d433c8",
       "architecture": [
         "x86_64",
         "arm64"
       ],
-      "minimum_macos": null,
-      "files": 1745
+      "app_launcher": "AfterTheEbb.app/Contents/MacOS/AfterTheEbb",
+      "launcher_mode": "0o100755",
+      "files": 1608,
+      "verified_payload_files": 47
     },
     {
       "platform": "Linux",
-      "filename": "AfterTheEbb-1.4-linux.tar.bz2",
-      "bytes": 58684544,
-      "sha256": "a2fc71135b71c3101f57b9c764c3d0794f8ac0ba5e1a9349428d5042b1560c5a",
+      "filename": "AfterTheEbb-1.4.1-linux.tar.bz2",
+      "bytes": 58660962,
+      "sha256": "29f6d4237d2e29af95feaebbb1ad778e4dbc0f7dd7a900531fea91fa6a1c52a3",
+      "launcher_mode": "0o755",
+      "runtime_mode": "0o755",
       "architecture": [
         "x86_64"
       ],
-      "launcher_mode": "0o755",
-      "runtime_mode": "0o755",
-      "files": 1747
+      "files": 1606,
+      "verified_payload_files": 47
     }
   ]
 }

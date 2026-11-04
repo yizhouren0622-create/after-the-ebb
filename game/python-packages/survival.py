@@ -614,8 +614,8 @@ def scan_reason(s):
 def scan(s):
     if scan_reason(s): return False
     spend(s, 4); s['scan'] = True
-    s['pending'] = event('不是回声', storybook.TEXT['不是回声'][1], [choice('抄下双人校准频率', {'flags': ['live_signal'], 'knowledge': 2, 'bond': 5, 'sanity': 6}, result='记录实时频率。知识 +2，羁绊 +5，两人精神 +6。')], '主线 / 实时信号')
-    s['pending']['text'] = storybook.TEXT['不是回声'][1]
+    s['pending'] = event('不是回声', storybook.TEXT['不是回声'], [choice('抄下双人校准频率', {'flags': ['live_signal'], 'knowledge': 2, 'bond': 5, 'sanity': 6}, result='记录实时频率。知识 +2，羁绊 +5，两人精神 +6。')], '主线 / 实时信号')
+    s['pending']['text'] = storybook.TEXT['不是回声']
     return True
 
 def night(s, ration0=1, ration1=1, fire=False):
@@ -673,7 +673,7 @@ def true_requirements(s):
 def ending_text(s, key):
     field = 'hp' if key == 'lost' else 'sanity'
     if key in storybook.PARTNER_ENDINGS and s['crew'][1][field] <= 0 < s['crew'][0][field]:
-        return storybook.PARTNER_ENDINGS[key][1]
+        return storybook.PARTNER_ENDINGS[key]
     return ENDINGS[key][2]
 
 def finish(s, key):
