@@ -84,6 +84,48 @@
       "rms_dbfs": -42.56,
       "description": "A blanket settling while the pair take shelter.",
       "channels": 2
+    },
+    "ui_switch.wav": {
+      "duration_seconds": 0.1,
+      "peak_dbfs": -29.0,
+      "rms_dbfs": -42.61,
+      "description": "Light wood click for tabs, filters and ration controls.",
+      "channels": 2
+    },
+    "ui_choice.wav": {
+      "duration_seconds": 0.16,
+      "peak_dbfs": -26.0,
+      "rms_dbfs": -40.48,
+      "description": "A muted press for committing a choice.",
+      "channels": 2
+    },
+    "event_broadcast.wav": {
+      "duration_seconds": 0.82,
+      "peak_dbfs": -25.0,
+      "rms_dbfs": -40.73,
+      "description": "Two worn speaker tones and a little radio air.",
+      "channels": 2
+    },
+    "event_ticket.wav": {
+      "duration_seconds": 0.66,
+      "peak_dbfs": -24.0,
+      "rms_dbfs": -38.89,
+      "description": "A short motor feed and the cut of a paper ticket.",
+      "channels": 2
+    },
+    "event_knocks.wav": {
+      "duration_seconds": 1.02,
+      "peak_dbfs": -24.0,
+      "rms_dbfs": -38.51,
+      "description": "Two sets of three hollow knocks behind a wall.",
+      "channels": 2
+    },
+    "event_signal.wav": {
+      "duration_seconds": 0.75,
+      "peak_dbfs": -24.0,
+      "rms_dbfs": -39.35,
+      "description": "Three receiver clicks as a live frequency opens.",
+      "channels": 2
     }
   }
 }

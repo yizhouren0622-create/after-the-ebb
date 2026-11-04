@@ -1,5 +1,5 @@
 {
-  "checks": 521,
+  "checks": 582,
   "files": {
     "where_the_sea_was.ogg": {
       "peak_dbfs": -8.96,
@@ -45,6 +45,30 @@
     "rest.wav": {
       "peak_dbfs": -26.0,
       "seconds": 2.2
+    },
+    "ui_switch.wav": {
+      "peak_dbfs": -29.0,
+      "seconds": 0.1
+    },
+    "ui_choice.wav": {
+      "peak_dbfs": -26.0,
+      "seconds": 0.16
+    },
+    "event_broadcast.wav": {
+      "peak_dbfs": -25.0,
+      "seconds": 0.82
+    },
+    "event_ticket.wav": {
+      "peak_dbfs": -24.0,
+      "seconds": 0.66
+    },
+    "event_knocks.wav": {
+      "peak_dbfs": -24.0,
+      "seconds": 1.02
+    },
+    "event_signal.wav": {
+      "peak_dbfs": -24.0,
+      "seconds": 0.75
     }
   },
   "full_volume_peak_bound": 0.5066,

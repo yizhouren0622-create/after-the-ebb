@@ -1,6 +1,6 @@
 init -20 python:
     config.name = "海退之后"
-    config.version = "1.4.1"
+    config.version = "1.4.2"
     config.save_directory = "AfterTheEbb-1.0-release"
     config.screen_width = 1600
     config.screen_height = 900
@@ -24,7 +24,7 @@ init -20 python:
     config.main_menu_music = "audio/where_the_sea_was.ogg"
     config.main_menu_music_fadein = 2.0
     build.name = "AfterTheEbb"
-    build.directory_name = "AfterTheEbb-1.4.1"
+    build.directory_name = "AfterTheEbb-1.4.2"
     build.executable_name = "AfterTheEbb"
     build.mac_info_plist = {
         "CFBundleIdentifier": "io.github.yizhouren0622-create.aftertheebb",
@@ -98,11 +98,21 @@ init python:
 
     renpy.music.register_channel('foley', mixer='sfx', loop=False)
 
+    SCENE_SOUNDS = {
+        '海消失的早晨': 'event_broadcast',
+        '闭馆广播': 'event_broadcast',
+        '仍在工作的接收器': 'event_broadcast',
+        '明日天气': 'event_broadcast',
+        '二十七号': 'event_ticket',
+        '另一端的敲击': 'event_knocks',
+        '不是回声': 'event_signal',
+    }
+
     def ensure_music():
         renpy.music.play('audio/where_the_sea_was.ogg', loop=True,
                          fadein=2.0, if_changed=True)
 
-    def play_result_sound(cue):
+    def play_foley(cue):
         # A dedicated channel lets quiet Foley ring without hover interruptions.
         renpy.music.play('audio/' + cue + '.wav', channel='foley',
                          loop=False, fadeout=.12, fadein=.025)
@@ -225,7 +235,7 @@ screen main_menu():
             textbutton "声音与画面" action ShowMenu("preferences_menu")
             textbutton "离开" action Quit(confirm=False)
     text "两只行李袋，一条走到灯塔的路。" xpos 82 ypos 817 size 18 color MUTED
-    text "原创独立短篇  /  v1.4" xpos 82 ypos 852 size 17 color MUTED
+    text ("原创独立短篇  /  v" + config.version) xpos 82 ypos 852 size 17 color MUTED
 
 screen expedition_setup():
     tag menu
@@ -355,6 +365,7 @@ screen hub(routine_report=None):
                 background bordered(DEEP if s['tab'] == tab else "#141e1f")
                 text_color INK
                 text_xalign .5
+                activate_sound "audio/ui_switch.wav"
                 action Function(select_tab, tab)
         if s['difficulty'] == 'standard':
             textbutton '知识补给' id 'knowledge_aid' text_size 20 xsize 180 padding (12, 12) action Return(('aid_menu',))
@@ -395,7 +406,7 @@ screen hub(routine_report=None):
                 hbox:
                     spacing 10
                     for value, label in [('ready', '可制作'), ('all', '全部配方'), ('done', '已完成')]:
-                        textbutton label text_size 18 padding (14, 6) selected craft_filter == value action SetScreenVariable('craft_filter', value)
+                        textbutton label text_size 18 padding (14, 6) selected craft_filter == value activate_sound "audio/ui_switch.wav" action SetScreenVariable('craft_filter', value)
                 viewport:
                     xysize (754, 242) child_size (730, None) mousewheel True draggable True
                     vbox:
@@ -620,6 +631,7 @@ screen knowledge_question():
                 textbutton question['answers'][answer_id]:
                     id ('answer_' + str(index))
                     xsize 1220 text_size 25 padding (20, 13)
+                    activate_sound "audio/ui_choice.wav"
                     action Return(('quiz_answer', active['token'], index))
             textbutton '暂时不答，返回旅途' text_size 20 xsize 1220 action Return(('quiz_cancel',))
 
@@ -656,6 +668,7 @@ screen story_event(e):
                 button:
                     xsize 1000 background bordered("#111a1b") padding (20, 10)
                     sensitive sim.can_choice(s, c)
+                    activate_sound "audio/ui_choice.wav"
                     action Return(('choose', index))
                     vbox:
                         spacing 1
@@ -687,6 +700,7 @@ screen night_menu():
                             id ('ration_%d_%s' % (i, val))
                             xsize 180 background bordered("#182223")
                             selected (r0 if i == 0 else r1) == val
+                            activate_sound "audio/ui_switch.wav"
                             action SetScreenVariable('r0' if i == 0 else 'r1', val)
             text "一份：生命 +5、体力 +26、精神 +4。\n半份：生命 -3、体力 +14。不吃：生命、精神持续下降。" size 20 color MUTED
             textbutton ("+ 生火过夜 / 燃料 1" if fire else "○ 生火过夜 / 燃料 1"):
@@ -709,6 +723,7 @@ screen night_menu():
                 textbutton "再想一想" action Return(('cancel',)) xsize 280
                 textbutton "收好行李，过夜  →":
                     xsize 620 background bordered(DEEP) text_color INK text_xalign .5
+                    activate_sound "audio/ui_choice.wav"
                     sensitive r0 + r1 <= sim.amt(s, 'food') and (not fire or sim.amt(s, 'fuel') >= 1)
                     action Return(('night', r0, r1, fire))
 
@@ -973,7 +988,7 @@ label survival_loop:
     $ renpy.save('journey')
     $ routine_report = None
     if s.get('feedback'):
-        $ play_result_sound(s['feedback']['cue'])
+        $ play_foley(s['feedback']['cue'])
         if not s['ending'] and is_routine_result(s['feedback']):
             $ routine_report = s['feedback']
             $ sim.acknowledge_feedback(s)
@@ -989,6 +1004,9 @@ label survival_loop:
         call screen ending_view(s['ending'])
         return
     if s['pending']:
+        $ scene_cue = SCENE_SOUNDS.get(s['pending']['title'])
+        if scene_cue:
+            $ play_foley(scene_cue)
         call screen story_event(s['pending'])
         $ sim.dispatch(s, _return)
         $ sim.tutorial_progress(s, _return)

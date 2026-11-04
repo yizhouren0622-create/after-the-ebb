@@ -12,19 +12,19 @@
 
 | 平台 | 运行包 | 启动方式 |
 | --- | --- | --- |
-| Windows x86_64 | `AfterTheEbb-1.4.1-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
-| macOS Intel / Apple Silicon | `AfterTheEbb-1.4.1-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
-| Linux x86_64 | `AfterTheEbb-1.4.1-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
+| Windows x86_64 | `AfterTheEbb-1.4.2-win.zip` | 完整解压后运行 `AfterTheEbb.exe` |
+| macOS Intel / Apple Silicon | `AfterTheEbb-1.4.2-mac.zip` | 使用 macOS 解压后打开 `AfterTheEbb.app` |
+| Linux x86_64 | `AfterTheEbb-1.4.2-linux.tar.bz2` | 用 `tar -xjf` 解压，然后运行 `./AfterTheEbb.sh` |
 
 保留解压后的完整目录。macOS、Linux 包由 Ren’Py 原生打包，保留执行权限；请直接在对应系统解压，不要经 Windows 解压再压缩后转发。
 
 Windows 已有本机游玩检查；macOS、Linux 尚未完成对应系统的实机游玩验证。macOS 本次未进行开发者证书签名和 Apple 公证。
 
-## 1.4.1 更新
+## 1.4.2 更新
 
-[完整更新说明](版本1.4.1.md)：开场、探索、营火交谈和结局改为直接写成的口语中文。制作、休息、进食和移动的结果在操作页就能看到。背包按类别显示现有物资，盐暴提示会随日期更新。[1.4 的更新记录](版本1.4.md)仍可查阅。
+切换页签和确认选项有了不同的短音。取号机、墙后的敲击、旧喇叭和接收机也会在对应事件中响一下。[1.4.2 更新说明](版本1.4.2.md)
 
-建议新开旅途体验新版叙事。旧存档、成就和原有配乐保留。
+故事和操作页的改版见 [1.4.1 更新说明](版本1.4.1.md)。旧存档可以继续游玩。
 
 ## 这是什么游戏
 

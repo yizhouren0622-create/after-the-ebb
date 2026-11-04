@@ -1,8 +1,8 @@
 {
   "status": "PASSED",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "test_selection": "storybook_release",
-  "assertions": 16,
+  "assertions": 18,
   "method": "RenPy internal timed screen events, isolated save directory",
   "screenshots": [
     "20-ready-crafting.png",
@@ -27,6 +27,7 @@
     "title SVG objects for all achievements",
     "keepsake detail",
     "simplified craft page",
-    "stocked bag items, storm countdown, inline rest and travel"
+    "stocked bag items, storm countdown, inline rest and travel",
+    "opening broadcast and ticket machine cues"
   ]
 }

@@ -11,6 +11,8 @@ screen _qa_command(command):
 testcase storybook_release:
     run Start('begin_tools_standard')
     pause until screen 'story_event'
+    pause .15
+    assert eval (renpy.music.get_playing(channel='foley') == 'audio/event_broadcast.wav')
     $ persistent.story_records = {}
     run Show('_qa_command', command=('choose', 0))
     pause until screen 'action_result'
@@ -34,8 +36,9 @@ testcase storybook_release:
     run Show('_qa_command', command=('explore',))
     pause until screen 'story_event'
     pause .3
-    screenshot '22-queue-story.png'
     assert eval (s['pending']['title'] == '二十七号')
+    assert eval (renpy.music.get_playing(channel='foley') == 'audio/event_ticket.wav')
+    screenshot '22-queue-story.png'
     run Show('_qa_command', command=('choose', 0))
     pause until screen 'action_result'
     assert eval ('queue_names' in s['flags'])

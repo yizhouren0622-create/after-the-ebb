@@ -1,6 +1,6 @@
 {
   "status": "PASSED",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "test_selection": "knowledge_achievements_release",
   "assertions": 15,
   "method": "RenPy internal timed screen events, isolated save directory",

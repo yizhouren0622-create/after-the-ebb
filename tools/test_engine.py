@@ -73,7 +73,8 @@ def main():
             scope = ['new region backgrounds in actual engine', 'one-time story branch save reload',
                      'reading archive and seen choices', 'real night preview',
                      'title SVG objects for all achievements', 'keepsake detail', 'simplified craft page',
-                     'stocked bag items, storm countdown, inline rest and travel']
+                     'stocked bag items, storm countdown, inline rest and travel',
+                     'opening broadcast and ticket machine cues']
         (root / 'tests' / result_name).write_text(json.dumps({
             'status': 'PASSED', 'version': version, 'test_selection': args.case,
             'assertions': int(re.search(r'Assertions\s*:\s*(\d+)', ''.join(transcript)).group(1)),

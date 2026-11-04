@@ -4,6 +4,7 @@ Install tools/requirements-audio.txt, then run this file. Nothing is downloaded
 at render time. No samples, soundfonts, models, API keys or paid services.
 """
 from pathlib import Path
+import argparse
 import json
 import math
 import sys
@@ -34,8 +35,8 @@ def filt(x, cutoff, kind='lowpass'):
     return sosfilt(butter(2, cutoff, btype=kind, fs=SR, output='sos'), x, axis=0).astype(np.float32)
 
 
-def noise(seconds, low=120, high=2200):
-    x = RNG.standard_normal(round(seconds * SR)).astype(np.float32)
+def noise(seconds, low=120, high=2200, rng=RNG):
+    x = rng.standard_normal(round(seconds * SR)).astype(np.float32)
     x = filt(filt(x, low, 'highpass'), high)
     return x / max(np.sqrt(np.mean(x ** 2)), 1e-6)
 
@@ -240,17 +241,78 @@ def foley():
     save('rest.wav', x, -26, 'A blanket settling while the pair take shelter.')
 
 
+def extra_foley():
+    # A separate seed makes this layer reproducible without rendering the score.
+    rng = np.random.default_rng(270916)
+
+    def timeline(seconds):
+        return np.arange(round(seconds * SR)) / SR
+
+    def tap(t, start, frequencies, decay):
+        since = np.maximum(t - start, 0)
+        ring = sum(gain * np.sin(2 * np.pi * f * since) for f, gain in frequencies)
+        return ring * (1 - np.exp(-since / .003)) * np.exp(-since / decay)
+
+    def soften_edges(x):
+        x[:220] *= np.linspace(0, 1, 220)
+        x[-882:] *= np.linspace(1, 0, 882)
+        return x
+
+    x = tap(timeline(.10), 0, [(540, 1), (810, .16)], .012)
+    save('ui_switch.wav', soften_edges(x), -29, 'Light wood click for tabs, filters and ration controls.')
+    t = timeline(.16)
+    x = tap(t, 0, [(285, 1), (615, .34)], .025)
+    x += .23 * tap(t, .026, [(770, 1)], .010)
+    save('ui_choice.wav', soften_edges(x), -26, 'A muted press for committing a choice.')
+
+    seconds = .82
+    t = timeline(seconds)
+    x = .34 * noise(seconds, 480, 2300, rng) * burst(seconds, .26, .18)
+    x += tap(t, .09, [(480, 1), (710, .22)], .040)
+    x += .52 * tap(t, .52, [(420, 1), (710, .13)], .048)
+    save('event_broadcast.wav', soften_edges(x), -25, 'Two worn speaker tones and a little radio air.')
+
+    seconds = .66
+    t = timeline(seconds)
+    feed = burst(seconds, .25, .13) + burst(seconds, .42, .065, .66)
+    x = feed * (.30 * noise(seconds, 500, 2700, rng) +
+                .31 * np.sin(2 * np.pi * 166 * t) * (.7 + .3 * np.sin(2 * np.pi * 37 * t)))
+    x += .42 * tap(t, .48, [(905, 1), (615, .42)], .012)
+    save('event_ticket.wav', soften_edges(x), -24, 'A short motor feed and the cut of a paper ticket.')
+
+    seconds = 1.02
+    t = timeline(seconds)
+    x = np.zeros_like(t)
+    for start in (.095, .20, .305, .54, .645, .75):
+        x += (1 if start < .5 else .76) * tap(t, start, [(128, 1), (209, .43), (377, .18)], .037)
+    save('event_knocks.wav', stereo(soften_edges(x), .15), -24, 'Two sets of three hollow knocks behind a wall.')
+
+    seconds = .75
+    t = timeline(seconds)
+    x = .25 * noise(seconds, 360, 2000, rng) * burst(seconds, .43, .20)
+    for start in (.11, .23, .35):
+        x += tap(t, start, [(330, 1), (710, .18)], .024)
+    save('event_signal.wav', soften_edges(x), -24, 'Three receiver clicks as a live frequency opens.')
+
+
 def main():
     import pedalboard, scipy
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--extra-foley', action='store_true', help='Render only the additional UI and story cues.')
+    args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
-    MANIFEST['tools'] = {'numpy': np.__version__, 'scipy': scipy.__version__,
-                         'soundfile': sf.__version__, 'pedalboard': pedalboard.__version__}
-    compose()
-    foley()
-    (ROOT / 'tests' / 'audio-manifest.json').write_text(
-        json.dumps(MANIFEST, ensure_ascii=False, indent=2) + '\n', 'utf-8')
+    manifest_path = ROOT / 'tests' / 'audio-manifest.json'
+    if args.extra_foley:
+        MANIFEST.update(json.loads(manifest_path.read_text('utf-8')))
+    else:
+        MANIFEST['tools'] = {'numpy': np.__version__, 'scipy': scipy.__version__,
+                             'soundfile': sf.__version__, 'pedalboard': pedalboard.__version__}
+        compose()
+        foley()
+    extra_foley()
+    manifest_path.write_text(json.dumps(MANIFEST, ensure_ascii=False, indent=2) + '\n', 'utf-8')
 
 
 if __name__ == '__main__':
